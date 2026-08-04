@@ -4,5 +4,4 @@ from typing import Protocol
 
 
 class ModelProvider(Protocol):
-    async def complete(self, *, system_prompt: str, user_prompt: str) -> str:
-        ...
+    async def complete(self, *, system_prompt: str, user_prompt: str) -> str: ...

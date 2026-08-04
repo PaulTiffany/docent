@@ -57,7 +57,9 @@ class LexicalRetriever:
             for term, frequency in document_frequency.items()
         }
 
-    def search(self, query: str, limit: int = 6, minimum_score: float = 0.0) -> list[RetrievedRecord]:
+    def search(
+        self, query: str, limit: int = 6, minimum_score: float = 0.0
+    ) -> list[RetrievedRecord]:
         query_tokens = tokenize(query)
         if not query_tokens:
             return []

@@ -5,7 +5,6 @@ import json
 from docent.config import DocentContract
 from docent.models import ChatMessage, RetrievedRecord
 
-
 _OUTPUT_SCHEMA = {
     "reply": "string",
     "record_ids": ["record IDs actually used"],

@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bounded-docent"
-version = "0.1.0"
+version = "0.2.0"
 description = "A bounded, source-grounded conversational docent"
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "MIT" }
+license = "MIT"
 authors = [{ name = "Paul Tiffany" }]
 dependencies = [
   "fastapi>=0.115,<1",
@@ -24,11 +24,13 @@ dev = [
   "pytest>=8,<9",
   "pytest-asyncio>=0.23,<1",
   "ruff>=0.6,<1",
+  "build>=1,<2",
 ]
 
 [project.scripts]
 docent-validate = "docent.cli:validate_main"
 docent-serve = "docent.cli:serve_main"
+docent-audit = "docent.content_audit:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

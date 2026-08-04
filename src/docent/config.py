@@ -29,6 +29,15 @@ class Settings(BaseSettings):
     rate_limit_per_hour: int = Field(default=120, ge=1, le=100000)
     allowed_origins: str = "http://localhost:7860"
     log_level: str = "INFO"
+    environment: str = "development"
+    room_history_limit: int = Field(default=100, ge=1, le=10000)
+    room_context_limit: int = Field(default=12, ge=0, le=100)
+    room_queue_limit: int = Field(default=20, ge=1, le=1000)
+    room_reset_enabled: bool = True
+
+    @property
+    def allow_room_reset(self) -> bool:
+        return self.room_reset_enabled and self.environment.casefold() in {"development", "test"}
 
     @property
     def origins(self) -> list[str]:

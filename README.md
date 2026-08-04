@@ -70,12 +70,20 @@ human message
 
 The gateway owns retrieval, prompt construction, rate limits, history bounds, and output validation. The model does not choose its own corpus or silently expand its jurisdiction.
 
+## Shared room
+
+The optional shared-room core records bounded public messages and queues generic turn requests without invoking a model. See [Room protocol](docs/room-protocol.md) and [Architecture](docs/architecture.md). Runtime workers and persistent stores are intentionally deferred.
+
 ## API
 
 - `GET /health`
 - `POST /api/chat`
 - `POST /api/search`
 - `GET /api/config/public`
+- `GET /api/room/messages`
+- `POST /api/room/messages`
+- `GET /api/room/status`
+- `POST /api/room/reset`
 
 Example:
 
