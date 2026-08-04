@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DocentRecord",
+  "type": "object",
+  "required": [
+    "record_id",
+    "record_type",
+    "subject_id",
+    "title",
+    "content",
+    "source",
+    "answer_policy",
+    "confidence",
+    "version"
+  ],
+  "properties": {
+    "record_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "record_type": {
+      "type": "string",
+      "minLength": 1
+    },
+    "subject_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "content": {
+      "type": "string",
+      "minLength": 1
+    },
+    "question_forms": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "topics": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "entities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "document_id",
+        "authority"
+      ],
+      "properties": {
+        "document_id": {
+          "type": "string"
+        },
+        "section": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "page": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "url": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "authority": {
+          "enum": [
+            "primary",
+            "official",
+            "contextual",
+            "commentary"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "speech_act": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "boundaries": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "answer_policy": {
+      "enum": [
+        "public",
+        "restricted",
+        "refuse-extraction"
+      ]
+    },
+    "public_links": {
+      "type": "array"
+    },
+    "confidence": {
+      "enum": [
+        "authoritative",
+        "high",
+        "medium",
+        "low",
+        "unknown"
+      ]
+    },
+    "valid_from": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "valid_until": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "version": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Docent</title>
+  <style>
+    :root { color-scheme: light dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+    body { margin: 0; background: Canvas; color: CanvasText; }
+    main { width: min(900px, calc(100% - 2rem)); margin: 2rem auto; }
+    header { margin-bottom: 1.5rem; }
+    h1 { margin-bottom: .25rem; }
+    #messages { display: grid; gap: .8rem; min-height: 45vh; }
+    .message { border: 1px solid color-mix(in srgb, CanvasText 18%, transparent); border-radius: 14px; padding: 1rem; white-space: pre-wrap; }
+    .human { margin-left: 12%; }
+    .docent { margin-right: 12%; }
+    .meta { font-size: .8rem; opacity: .72; margin-top: .6rem; }
+    form { position: sticky; bottom: 0; display: grid; grid-template-columns: 1fr auto; gap: .7rem; padding: 1rem 0; background: Canvas; }
+    textarea { min-height: 72px; resize: vertical; border-radius: 12px; padding: .8rem; font: inherit; }
+    button { border-radius: 12px; padding: 0 1.2rem; font: inherit; cursor: pointer; }
+    button[disabled] { opacity: .55; cursor: wait; }
+    .status { font-size: .85rem; opacity: .75; }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1 id="name">Docent</h1>
+    <p id="role">A bounded guide to the configured collection.</p>
+    <div class="status" id="status">Loading…</div>
+  </header>
+  <section id="messages" aria-live="polite"></section>
+  <form id="form">
+    <textarea id="input" maxlength="12000" placeholder="Ask about the configured collection…" required></textarea>
+    <button id="send" type="submit">Send</button>
+  </form>
+</main>
+<script>
+const sessionId = crypto.randomUUID();
+const form = document.querySelector('#form');
+const input = document.querySelector('#input');
+const send = document.querySelector('#send');
+const messages = document.querySelector('#messages');
+const status = document.querySelector('#status');
+
+function addMessage(kind, text, meta='') {
+  const article = document.createElement('article');
+  article.className = `message ${kind}`;
+  article.textContent = text;
+  if (meta) {
+    const footer = document.createElement('div');
+    footer.className = 'meta';
+    footer.textContent = meta;
+    article.appendChild(footer);
+  }
+  messages.appendChild(article);
+  article.scrollIntoView({behavior: 'smooth', block: 'end'});
+}
+
+fetch('/api/config/public').then(r => r.json()).then(cfg => {
+  document.querySelector('#name').textContent = cfg.name;
+  document.querySelector('#role').textContent = cfg.role;
+  status.textContent = `Provider: ${cfg.provider}`;
+}).catch(() => { status.textContent = 'Configuration unavailable'; });
+
+form.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const message = input.value.trim();
+  if (!message) return;
+  addMessage('human', message);
+  input.value = '';
+  send.disabled = true;
+  status.textContent = 'Thinking…';
+  try {
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {'content-type': 'application/json'},
+      body: JSON.stringify({session_id: sessionId, message})
+    });
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.detail || 'Request failed');
+    const sources = body.record_ids.length ? `Sources: ${body.record_ids.join(', ')}` : 'No source records used';
+    const limitations = body.limitations.length ? ` · ${body.limitations.join(' ')}` : '';
+    addMessage('docent', body.reply, sources + limitations);
+    status.textContent = 'Ready';
+  } catch (error) {
+    addMessage('docent', `The docent is unavailable: ${error.message}`);
+    status.textContent = 'Error';
+  } finally {
+    send.disabled = false;
+    input.focus();
+  }
+});
+</script>
+</body>
+</html>
