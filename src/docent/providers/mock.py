@@ -2,12 +2,19 @@ from __future__ import annotations
 
 import json
 import re
+import time
+
+from docent.models import ProviderCompletion
 
 
 class MockProvider:
-    """Deterministic no-key provider for local smoke tests and demonstrations."""
+    """Deterministic no-key provider for tests, offline use, and corpus debugging."""
 
-    async def complete(self, *, system_prompt: str, user_prompt: str) -> str:
+    provider_label = "mock"
+    configured_model = "deterministic-corpus"
+
+    async def complete(self, *, system_prompt: str, user_prompt: str) -> ProviderCompletion:
+        started = time.monotonic()
         match = re.search(
             r"BEGIN RETRIEVED PUBLIC RECORDS\s*(\[.*?\])\s*END RETRIEVED PUBLIC RECORDS",
             user_prompt,
@@ -29,14 +36,21 @@ class MockProvider:
                 "record_ids": [str(top["record_id"])] if top.get("record_id") else [],
                 "grounded": True,
                 "limitations": [
-                    "Deterministic mock mode returns the top retrieved record without model synthesis."
+                    "Deterministic corpus mode returns the top retrieved record without model inference."
                 ],
             }
         else:
             payload = {
                 "reply": "I do not have enough support in the configured collection to answer that reliably.",
                 "record_ids": [],
-                "grounded": True,
+                "grounded": False,
                 "limitations": ["No relevant public record was retrieved."],
             }
-        return json.dumps(payload)
+        return ProviderCompletion(
+            raw_content=json.dumps(payload),
+            configured_model=self.configured_model,
+            actual_model=self.configured_model,
+            finish_reason="deterministic",
+            response_format_mode="deterministic",
+            duration_ms=max(int((time.monotonic() - started) * 1000), 0),
+        )

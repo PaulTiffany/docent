@@ -7,7 +7,7 @@ const QUESTIONS = [
   "Does Docent use OmegaClaw?",
 ];
 
-const state = { config: null, apiBase: "", sessionId: crypto.randomUUID(), projectLoaded: false };
+const state = { config: null, serverConfig: null, apiBase: "", sessionId: crypto.randomUUID(), projectLoaded: false, mode: null };
 const $ = (selector) => document.querySelector(selector);
 
 function normalizedBase(value) { return (value || "").trim().replace(/\/+$/, ""); }
@@ -42,13 +42,26 @@ async function checkConnection() {
   try {
     const response = await fetch(endpoint("/api/config/public"));
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const config = await response.json();
-    const mode = config.provider === "mock" ? "Deterministic mock mode" : `Provider: ${config.provider}`;
-    setConnection("ok", "Ready", mode);
+    const config = await response.json(); state.serverConfig = config;
+    if (!state.mode || !config.enabled_inference_modes.includes(state.mode)) state.mode = config.default_inference_mode;
+    const live = config.live_inference_enabled;
+    const detail = live ? `Live inference via ${config.provider === "openrouter" ? "OpenRouter" : config.provider} · configured route: ${config.configured_model}` : "Deterministic corpus mode · no model inference";
+    setConnection("ok", "Ready", detail); updateModeControls();
     $("#setup-panel").classList.add("hidden");
   } catch (error) {
     setConnection("error", "Unavailable", `Public API could not be reached · ${error.message}`);
   }
+}
+
+function updateModeControls() {
+  const config = state.serverConfig; if (!config) return;
+  const live = state.mode === "live";
+  $("#mode-label").textContent = live ? `Live inference · configured route: ${config.configured_model}` : "Deterministic corpus mode · no model inference";
+  const alternate = live ? "deterministic" : "live";
+  const allowed = config.enabled_inference_modes.includes(alternate);
+  $("#toggle-mode").classList.toggle("hidden", !allowed);
+  $("#toggle-mode").textContent = live ? "Switch to deterministic" : "Switch back to live";
+  $("#deterministic-fallback").classList.add("hidden");
 }
 
 function showView(name) {
@@ -71,21 +84,31 @@ function addMessage(role, text, response = null) {
     badge.textContent = response.grounded && response.record_ids.length ? "grounded" : response.limitations.length ? "limited" : "ungrounded";
     const sources = response.retrieval.filter((hit) => response.record_ids.includes(hit.record_id)).map((hit) => `${hit.record_id} — ${hit.title}`);
     evidence.append(badge, document.createTextNode(sources.length ? sources.join(" · ") : "No supporting public record ID"));
+    if (response.provenance) { const provenance = document.createElement("div"); provenance.className = "provenance"; provenance.textContent = response.provenance.inference_mode === "live" ? `LIVE · configured ${response.provenance.configured_model} · actual ${response.provenance.actual_model || "not reported"}` : "DETERMINISTIC · no model inference"; evidence.append(document.createElement("br"), provenance); }
     if (response.limitations.length) evidence.append(document.createElement("br"), document.createTextNode(response.limitations.join(" ")));
     article.append(evidence);
   }
   $("#messages").append(article); article.scrollIntoView({ behavior: "smooth", block: "end" });
 }
 
-async function sendQuestion(question) {
+async function sendQuestion(question, mode = state.mode) {
   if (!state.apiBase) { $("#setup-panel").classList.remove("hidden"); $("#api-dialog").showModal(); return; }
-  addMessage("human", question); $("#send-chat").disabled = true; setConnection("", "Sending", "Waiting for one bounded response…");
+  addMessage("human", question); $("#send-chat").disabled = true; setConnection("", "Sending", mode === "live" ? "Waiting for live bounded synthesis…" : "Retrieving one deterministic record…");
   try {
-    const response = await fetch(endpoint("/api/chat"), { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ session_id: state.sessionId, message: question }) });
-    const body = await response.json(); if (!response.ok) throw new Error(typeof body.detail === "string" ? body.detail : `HTTP ${response.status}`);
+    const response = await fetch(endpoint("/api/chat"), { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ session_id: state.sessionId, message: question, mode }) });
+    const body = await response.json();
+    if (!response.ok) {
+      const detail = typeof body.detail === "object" ? body.detail : { code: "live_inference_unavailable", message: String(body.detail || `HTTP ${response.status}`) };
+      const retry = detail.retry_after_seconds == null ? "" : ` Retry after about ${detail.retry_after_seconds} seconds.`;
+      addMessage("error", `${detail.message || "Live inference failed."}${retry}`);
+      if (mode === "live" && state.serverConfig?.deterministic_mode_enabled) $("#deterministic-fallback").classList.remove("hidden");
+      setConnection("error", "Live request failed", detail.code || "live_inference_unavailable"); return;
+    }
     addMessage("docent", body.reply, body); await checkConnection();
-  } catch (error) { addMessage("docent", `The public docent is unavailable. ${error.message}`); setConnection("error", "Unavailable", "Check the API URL and CORS origin"); }
-  finally { $("#send-chat").disabled = false; }
+  } catch (error) {
+    addMessage("error", `The public Docent API could not be reached. ${error.message}`);
+    setConnection("error", "Unavailable", "Check the API URL and CORS origin");
+  } finally { $("#send-chat").disabled = false; }
 }
 
 function statusRows(capabilities) {
@@ -117,6 +140,8 @@ async function loadProjectState() {
 document.querySelectorAll(".nav-tab").forEach((tab) => tab.addEventListener("click", () => showView(tab.dataset.view)));
 QUESTIONS.forEach((question) => { const button = document.createElement("button"); button.className = "chip"; button.type = "button"; button.textContent = question; button.addEventListener("click", () => sendQuestion(question)); $("#example-questions").append(button); });
 $("#chat-form").addEventListener("submit", (event) => { event.preventDefault(); const input = $("#chat-input"); const question = input.value.trim(); if (question) { input.value = ""; sendQuestion(question); } });
+$("#toggle-mode").addEventListener("click", () => { state.mode = state.mode === "live" ? "deterministic" : "live"; updateModeControls(); checkConnection(); });
+$("#deterministic-fallback").addEventListener("click", () => { state.mode = "deterministic"; updateModeControls(); const last = [...document.querySelectorAll(".message.human p")].at(-1)?.textContent; if (last) sendQuestion(last, "deterministic"); });
 $("#reset-chat").addEventListener("click", () => { state.sessionId = crypto.randomUUID(); $("#messages").innerHTML = ""; addMessage("docent", "Local conversation reset. The server retains only bounded recent history for the previous anonymous session ID."); });
 $("#configure-api").addEventListener("click", () => $("#api-dialog").showModal());
 $("#save-api").addEventListener("click", (event) => { event.preventDefault(); const value = normalizedBase($("#api-url").value); if (value) localStorage.setItem("docent.publicApiBaseUrl", value); else localStorage.removeItem("docent.publicApiBaseUrl"); state.apiBase = value || normalizedBase(state.config.api_base_url || (isPages() ? "" : location.origin)); state.projectLoaded = false; $("#api-dialog").close(); checkConnection(); });

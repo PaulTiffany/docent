@@ -36,6 +36,12 @@ def test_missing_api_url_has_setup_state_and_local_override() -> None:
     assert "docent.publicApiBaseUrl" in script
     assert "localStorage" in script
     assert "API key" not in (SOURCE / "index.html").read_text(encoding="utf-8")
+    assert "DOCENT_API_KEY" not in script
+    assert "deterministic-fallback" in script
+    assert "actual_model" in script
+    assert "message: question, mode" in script
+    assert 'fetch(endpoint("/api/chat")' in script
+    assert "openrouter.ai/api" not in script
 
 
 def test_fastapi_serves_canonical_frontend_assets() -> None:

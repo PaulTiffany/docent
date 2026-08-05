@@ -79,3 +79,11 @@ Add Space secret `DOCENT_API_KEY=<provider credential>`. It must never appear in
 ## Readiness and limitations
 
 `GET /health` reports safe status, provider mode, record count, and Docent name. It does not reveal environment values or credentials. Room/session state disappears on sleep or restart; the epoch protocol enables resynchronization but does not recover lost messages. No deployed Space or Pages validation is claimed until live endpoints are observed.
+
+## OpenRouter reference deployment
+
+OpenRouter uses the generic `openai_compatible` provider; no OpenRouter-only runtime provider is required. Configure the Space secret `DOCENT_API_KEY` and the variables listed in [demo.md](demo.md#turn-on-free-real-inference). `DOCENT_MODEL` is opaque to Docent: `openrouter/free`, a currently supported `provider/model:free`, a paid route, or a model on another compatible service can be selected without a code change.
+
+When `DOCENT_SITE_URL` and `DOCENT_APP_TITLE` are present, the provider sends the optional OpenRouter attribution headers `HTTP-Referer` and `X-OpenRouter-Title`. They contain no user message, session ID, key, path, or deployment diagnostics.
+
+The Space key belongs only in Hugging Face Space Secrets. `HF_TOKEN` remains a GitHub Actions deployment credential and is not a model key. GitHub Pages receives only the public Docent API URL and always calls Docent, never OpenRouter.

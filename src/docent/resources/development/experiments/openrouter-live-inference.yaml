@@ -1,0 +1,12 @@
+experiment_id: openrouter-live-inference-demo
+title: Capped live synthesis feedback experiment
+selected_pathway_id: openrouter-live-inference
+hypothesis: A capped real model will generate more useful feedback about Docent's retrieval, explanations, and development-pathway design than deterministic record playback, while retaining bounded cost, configurable model choice, and an explicit deterministic fallback.
+status: active
+setup: [Use OpenRouter through the generic OpenAI-compatible provider, Configure model choice only through DOCENT_MODEL, Reserve a bounded process-local live attempt allowance, Keep deterministic mode explicit]
+expected_observations: [Visitors ask synthesis questions spanning multiple public records, Actual routed model identifiers reveal route variability, Failures remain legible without fabricated fallback answers]
+completion_evidence: [Repository provider metadata and error tests pass, Repository budget and frontend mode tests pass, Branch CI is green, Hugging Face reports live inference enabled, Pages retrieves live configuration, A browser synthesis answer shows actual model and supporting records, Deterministic mode remains explicitly selectable, A DOCENT_MODEL-only switch is observed if practical]
+failure_conditions: [A provider secret reaches public assets, Restricted evidence reaches a prompt, Live failures appear as deterministic model answers, The model controls evidence authorization or provenance, Shared allowance is not bounded]
+safety_boundaries: [No browser-side provider calls, No silent fallback, Gateway-authored provenance, Local envelope validation, Process-local attempt budget, Human-controlled model configuration]
+observations: [Typed provider metadata and failure tests pass locally, Explicit mode and no-silent-fallback tests pass locally, Budget concurrency and UTC rollover tests pass locally, The canonical frontend and packaged resources are synchronized, Source and wheel builds plus installed-wheel health pass, The local Docker engine is unavailable; branch CI built the non-root image and passed startup and health checks, No OpenRouter key has been added or inspected, No live OpenRouter response has been observed]
+result_status: active

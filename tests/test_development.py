@@ -29,6 +29,8 @@ def test_current_capabilities_and_human_selection_are_honest() -> None:
     assert capabilities["mediated-room-runtime"].status == "absent"
     assert capabilities["external-runtime-adapter"].status == "absent"
     assert experiments["public-self-demo-2026-08"].result_status == "active"
+    assert experiments["openrouter-live-inference-demo"].status == "active"
+    assert experiments["openrouter-live-inference-demo"].result_status == "active"
     assert all(decision.decided_by == "human" for decision in manifest.decisions)
 
 
@@ -41,7 +43,10 @@ def test_frontier_derivation_is_deterministic_and_has_no_optimum() -> None:
     assert first == second
     assert first.optimal_pathway is None
     assert first.human_selection_required is True
-    assert first.selected_pathway_ids == ["public-self-demo"]
+    assert first.selected_pathway_ids == [
+        "openrouter-live-inference",
+        "public-self-demo",
+    ]
     assert [item.pathway.pathway_id for item in first.admissible_pathways] == sorted(
         item.pathway.pathway_id for item in first.admissible_pathways
     )

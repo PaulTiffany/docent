@@ -1,0 +1,47 @@
+pathway_id: openrouter-live-inference
+title: Capped OpenRouter live inference
+intent: Make real bounded synthesis the normal public experience while retaining explicit deterministic corpus mode.
+status: active
+evidence_basis: [Human directive on 2026-08-05, Existing generic OpenAI-compatible provider and public demo]
+preconditions:
+  - capability_id: bounded-single-user-chat
+    allowed_statuses: [implemented]
+  - capability_id: openai-compatible-provider
+    allowed_statuses: [implemented]
+proposed_changes: [Add typed provider provenance and errors, Add explicit inference modes, Add a process-local daily attempt budget, Update the public client and deployment guidance]
+capabilities_advanced: [model-backed-public-chat, configurable-model-selection, explicit-deterministic-mode, provider-provenance, quota-aware-failures, application-inference-budget]
+invariants: [Docent controls evidence authorization, Local response validation remains mandatory, No silent fallback, Model choice remains configuration-driven, Provider secrets remain server-side]
+risks: [Free routing availability changes externally, Shared allowance can be exhausted, Routed models vary in JSON reliability]
+unresolved_uncertainties: [Which routed models answer synthesis questions reliably, Whether live synthesis yields more useful visitor feedback]
+reversibility: High; operators can return to mock mode or change the configured model without code changes.
+lock_in_implications: Low; OpenRouter uses the generic OpenAI-compatible boundary and is a reference deployment choice.
+completion_evidence:
+  - {evidence_id: provider-metadata-tests, evidence_type: repository, description: Typed provider metadata implementation passes, status: satisfied}
+  - {evidence_id: openrouter-config-tests, evidence_type: repository, description: OpenRouter-compatible and generic configuration tests pass, status: satisfied}
+  - {evidence_id: no-silent-fallback-tests, evidence_type: repository, description: No-silent-fallback tests pass, status: satisfied}
+  - {evidence_id: error-budget-tests, evidence_type: repository, description: Error mapping and budget tests pass, status: satisfied}
+  - {evidence_id: frontend-mode-tests, evidence_type: repository, description: Frontend mode and secret-boundary tests pass, status: satisfied}
+  - {evidence_id: documentation, evidence_type: repository, description: Deployment and security documentation exists, status: satisfied}
+  - {evidence_id: branch-ci, evidence_type: repository, description: Branch CI is green, status: satisfied}
+  - {evidence_id: space-live-config, evidence_type: live, description: Hugging Face reports live inference enabled, status: pending}
+  - {evidence_id: pages-live-config, evidence_type: live, description: Pages retrieves the live configuration, status: pending}
+  - {evidence_id: browser-live-answer, evidence_type: live, description: Browser-to-Space synthesis succeeds with actual model and supporting records, status: pending}
+  - {evidence_id: deterministic-still-explicit, evidence_type: live, description: Deterministic mode remains explicitly selectable and labeled, status: pending}
+  - {evidence_id: environment-model-switch, evidence_type: live, description: A model switch using only DOCENT_MODEL is observed if practical, status: pending}
+implementation_references: [src/docent/providers/openai_compatible.py, src/docent/service.py, web/app.js]
+pathways_unlocked: [evaluation-harness, research-observability]
+pathways_made_harder: []
+decision_history: [development/decisions/openrouter-live-inference.yaml]
+pressure_profile:
+  user_visibility: high
+  immediate_usefulness: high
+  information_gain: high
+  engineering_cost: medium
+  operational_cost: low
+  security_exposure: medium
+  architectural_lock_in: low
+  reversibility: high
+  future_option_value: high
+  dependence_on_external_services: high
+  authors_note: Qualitative pressures authored for human deliberation; they are not an aggregate or optimum.
+public_explanation: A human selected capped live inference as the next experiment. OpenRouter is the reference gateway, not a required dependency or an automatically optimal choice.

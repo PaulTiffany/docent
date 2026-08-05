@@ -47,3 +47,7 @@ Validation rejects malformed JSON, unknown fields, invalid enums, blank required
 Do not manually duplicate capability or pathway state into the corpus. `development_records.py` converts validated public manifests into reserved `development.*` records at startup. Their source locator preserves the original capability, pathway, decision, or experiment ID and their content labels status and uncertainty.
 
 Public APIs call the public-only retriever. `restricted` and `refuse-extraction` records are never scored for public results and never enter prompts, search payloads, or mock replies. An internal caller must choose the separate explicit retrieval method and must not expose its output.
+
+## Authoring for both inference modes
+
+Write each public record so it is useful when shown directly in deterministic corpus mode and when included in a bounded live synthesis prompt. Live models do not expand source jurisdiction: only public retrieved records enter prompts, and returned source IDs are checked locally. Do not embed provider keys, mutable free-tier quotas, or a currently available model slug as timeless subject matter.

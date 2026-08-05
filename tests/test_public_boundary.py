@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 import docent.app as app_module
 from docent.config import Settings, load_contract
 from docent.history import SessionHistory
-from docent.models import DocentRecord, SourceLocator
+from docent.models import DocentRecord, ProviderCompletion, SourceLocator
 from docent.retrieval import LexicalRetriever
 from docent.service import DocentService
 
@@ -34,9 +34,17 @@ class CapturingProvider:
         self.payload = payload
         self.user_prompt = ""
 
-    async def complete(self, *, system_prompt: str, user_prompt: str) -> str:
+    provider_label = "test"
+    configured_model = "test-model"
+
+    async def complete(self, *, system_prompt: str, user_prompt: str) -> ProviderCompletion:
         self.user_prompt = user_prompt
-        return json.dumps(self.payload)
+        return ProviderCompletion(
+            raw_content=json.dumps(self.payload),
+            configured_model=self.configured_model,
+            response_format_mode="json_object",
+            duration_ms=0,
+        )
 
 
 def test_public_retrieval_excludes_highly_relevant_non_public_records() -> None:
@@ -121,13 +129,18 @@ def test_grounding_is_cleared_when_provider_sources_are_invalid() -> None:
     )
 
     envelope = service._parse_envelope(
-        json.dumps(
-            {
-                "reply": "Unsupported claim",
-                "record_ids": ["invented", "invented"],
-                "grounded": True,
-                "limitations": [],
-            }
+        ProviderCompletion(
+            raw_content=json.dumps(
+                {
+                    "reply": "Unsupported claim",
+                    "record_ids": ["invented", "invented"],
+                    "grounded": True,
+                    "limitations": [],
+                }
+            ),
+            configured_model="test-model",
+            response_format_mode="json_object",
+            duration_ms=0,
         ),
         allowed_record_ids={"public-safe"},
     )

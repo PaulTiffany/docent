@@ -24,6 +24,8 @@ from docent.history import SessionHistory
 from docent.models import (
     ChatRequest,
     ChatResponse,
+    InferenceMode,
+    PublicConfig,
     RoomMessageCreate,
     RoomMessageCreateResponse,
     RoomMessagesResponse,
@@ -33,6 +35,13 @@ from docent.models import (
     SearchResponse,
 )
 from docent.providers import build_provider
+from docent.providers.errors import (
+    InferenceModeDisabledError,
+    LiveBudgetExhaustedError,
+    ProviderError,
+    ProviderRateLimitError,
+    ProviderTimeoutError,
+)
 from docent.rate_limit import InMemoryRateLimiter
 from docent.retrieval import LexicalRetriever
 from docent.room import (
@@ -88,14 +97,27 @@ async def health() -> dict:
     }
 
 
-@app.get("/api/config/public")
-async def public_config() -> dict:
-    return {
-        "name": contract.identity.name,
-        "role": contract.identity.role,
-        "description": settings.description,
-        "provider": settings.provider,
-    }
+@app.get("/api/config/public", response_model=PublicConfig)
+async def public_config() -> PublicConfig:
+    modes = [InferenceMode.live] if settings.live_inference_enabled else []
+    if settings.allow_deterministic_mode:
+        modes.append(InferenceMode.deterministic)
+    return PublicConfig(
+        name=contract.identity.name,
+        role=contract.identity.role,
+        description=settings.description,
+        default_inference_mode=InferenceMode(settings.default_inference_mode),
+        live_inference_enabled=settings.live_inference_enabled,
+        deterministic_mode_enabled=settings.allow_deterministic_mode,
+        enabled_inference_modes=modes,
+        provider=settings.provider,
+        configured_model=settings.model
+        if settings.live_inference_enabled
+        else "deterministic-corpus",
+        app_title=settings.app_title,
+        live_daily_budget_enabled=service.live_budget.enabled,
+        live_daily_budget_remaining=await service.live_budget.remaining(),
+    )
 
 
 @app.get("/api/development/capabilities", response_model=list[CapabilityRecord])
@@ -156,10 +178,35 @@ async def chat(request: ChatRequest, http_request: Request) -> ChatResponse:
     if not await rate_limiter.allow(client_key):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
     try:
-        return await service.answer(request.session_id, request.message)
+        return await service.answer(request.session_id, request.message, request.mode)
+    except InferenceModeDisabledError as exc:
+        raise HTTPException(
+            status_code=409,
+            detail={"code": exc.public_code, "message": exc.public_message},
+        ) from exc
+    except LiveBudgetExhaustedError as exc:
+        raise HTTPException(
+            status_code=429,
+            detail={"code": exc.public_code, "message": exc.public_message},
+        ) from exc
+    except ProviderError as exc:
+        logger.warning("Live provider request failed: %s", exc.public_code)
+        status_code = 504 if isinstance(exc, ProviderTimeoutError) else 503
+        if isinstance(exc, ProviderRateLimitError):
+            status_code = 429
+        detail = {"code": exc.public_code, "message": exc.public_message}
+        if exc.retry_after is not None:
+            detail["retry_after_seconds"] = exc.retry_after
+        raise HTTPException(status_code=status_code, detail=detail) from exc
     except Exception as exc:
         logger.exception("Docent turn failed")
-        raise HTTPException(status_code=503, detail="Docent is temporarily unavailable") from exc
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "code": "live_inference_unavailable",
+                "message": "Docent is temporarily unavailable.",
+            },
+        ) from exc
 
 
 @app.delete("/api/sessions/{session_id}")

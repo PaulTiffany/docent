@@ -58,7 +58,7 @@ The default corpus is `corpus/self-docent.jsonl`. Development records are genera
 - Local: `docent-serve`
 - Docker: `docker build -t docent . && docker run --rm -p 7860:7860 docent`
 - GitHub Pages: static client built from `web/`
-- Hugging Face: Docker Space on port 7860, deterministic mock by default
+- Hugging Face: Docker Space on port 7860; live OpenRouter inference when configured, with explicit deterministic fallback
 
 Provider credentials stay server-side. Pages receives only a public API URL. See [deployment](docs/deployment.md).
 
@@ -80,3 +80,7 @@ This repository contains no deleted subject-specific atlas, prior hosted-space i
 Development was informed by public-agent experiments using OmegaClaw. OmegaClaw is credited in [ACKNOWLEDGMENTS.md](ACKNOWLEDGMENTS.md) but is not bundled or running here.
 
 MIT licensed. See [LICENSE](LICENSE).
+
+## Live inference without surrendering evidence control
+
+The reference deployment can use OpenRouter through the generic OpenAI-compatible provider. Docent still retrieves and authorizes public evidence, builds the bounded prompt, validates the response envelope, and publishes gateway-authored provenance. The operator changes models with `DOCENT_MODEL`; visitors cannot supply provider settings. Deterministic corpus mode remains available for offline use, tests, corpus debugging, and explicit fallback. See [the demo checklist](docs/demo.md#turn-on-free-real-inference).
