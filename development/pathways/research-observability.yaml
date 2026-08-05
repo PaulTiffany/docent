@@ -1,0 +1,22 @@
+pathway_id: research-observability
+title: Research observability
+intent: Expose privacy-aware retrieval and turn metadata for studying real use.
+status: proposed
+evidence_basis: [Existing response retrieval metadata and development experiment]
+preconditions:
+  - capability_id: bounded-single-user-chat
+    allowed_statuses: [implemented]
+proposed_changes: [Define safe events, Add opt-in structured logs, Add experiment summaries]
+capabilities_advanced: [public-self-demo]
+invariants: [No chain-of-thought logging, Minimize user-content retention]
+risks: [Privacy leakage, Metrics changing behavior]
+unresolved_uncertainties: [Useful events, Consent and retention]
+reversibility: High before durable telemetry is enabled.
+lock_in_implications: Low to medium.
+completion_evidence: [{evidence_id: observability-threat-model, evidence_type: repository, description: Event schema and privacy tests exist, status: pending}]
+implementation_references: [docs/SECURITY.md]
+pathways_unlocked: []
+pathways_made_harder: []
+decision_history: []
+pressure_profile: {user_visibility: low, immediate_usefulness: medium, information_gain: high, engineering_cost: medium, operational_cost: medium, security_exposure: high, architectural_lock_in: low, reversibility: high, future_option_value: high, dependence_on_external_services: low, authors_note: Authored qualitative profile; no aggregate score is computed.}
+public_explanation: Observability could increase learning from the demo, but only with explicit privacy boundaries.

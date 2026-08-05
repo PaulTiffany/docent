@@ -1,33 +1,54 @@
 # Architecture
 
-Docent is a bounded public interpreter. The gateway, not the model, owns retrieval, capability policy, validation, and publication.
+Docent is a bounded public interpreter and a self-describing research artifact. The gateway—not a provider or browser—owns public retrieval, capability policy, history bounds, validation, and publication.
 
-## Two entry paths
+## Working single-user path
 
-The bounded single-user path remains `POST /api/chat`: one message, bounded session history, typed-record retrieval, one provider call, and one validated response envelope.
+```text
+POST /api/chat
+  ? strict ChatRequest and rate limit
+  ? bounded SessionHistory
+  ? LexicalRetriever.search (public records only)
+  ? fixed contract + transcript + evidence prompt
+  ? configured ModelProvider
+  ? strict DocentEnvelope validation
+  ? unique retrieved source IDs + ChatResponse
+```
 
-The optional shared-room path under `/api/room` accepts and stores human messages, exposes cursor-based polling and room status, and places bounded `TurnRequest` objects on an in-memory queue. It does not call a provider. This keeps public transport state separate from agent execution.
+`DocentService` preserves this existing path. Restricted and refuse-extraction records are filtered before scoring, prompt construction, `/api/search`, or mock output. An explicitly named `search_internal` seam exists for a future trusted policy, but no public endpoint calls it.
 
-## Components
+## Self-describing development state
 
-- `corpus.py` validates complete typed records.
-- `retrieval.py` provides deterministic bounded lexical retrieval.
-- `prompting.py` separates instructions, transcript, and evidence.
-- `service.py` orchestrates the existing single-user turn.
-- `contracts.py` defines replaceable room, queue, runtime, and session interfaces.
-- `room.py` supplies bounded in-memory room and queue implementations.
-- `providers/` isolates model-provider calls used by `/api/chat`.
-- `app.py` exposes HTTP contracts and maps domain failures to explicit status codes.
-- `content_audit.py` guards generic implementation surfaces against configured deployment identifiers.
+`development.py` validates `CapabilityRecord`, `PathwayRecord`, `DecisionRecord`, and `ExperimentRecord` manifests and derives `DevelopmentFrontier`. The frontier reports current capabilities, admissible pathways, blocked pathways with unmet preconditions, unlocks, and authored qualitative pressures. It never mutates a manifest or selects an optimum.
 
-## Runtime boundary
+`development_records.py` converts public manifests to reserved `development.*` `DocentRecord` evidence at load time. The original manifest ID remains in the source locator. This makes status and uncertainty retrievable without maintaining a second prose copy.
 
-`AgentRuntime` receives a `TurnRequest` containing the triggering message, bounded context, retrieved records, and explicit session/room metadata. It returns a `TurnResult` containing a validated public envelope and operational timing/status metadata. Neither contract contains unrestricted internal reasoning.
+Read-only endpoints under `/api/development` expose stable, ordered models. There are no query-driven mutations or write endpoints.
 
-A future external runtime attaches by implementing `AgentRuntime` and consuming `TurnQueue`; it must not move retrieval or output validation behind the runtime boundary. No external-agent adapter is included yet.
+## Canonical frontend
 
-## Persistence and bounds
+`web/` is the only authored frontend source. `tools/frontend.py` deterministically builds identical FastAPI assets under `src/docent/static/` and Pages assets under `docs/`. CI rejects drift and secret-like public configuration. The client calls same-origin APIs under FastAPI or a configured public origin under Pages; it never calls a model provider directly.
 
-The reference stores are intentionally in-memory. Room history and queued turns have independent configurable bounds. Restarting the process loses room history; resetting a room creates a new epoch and invalidates old cursors. Durable adapters can implement the same protocols later.
+## Partial room transport
 
-No subject-specific atlas or prior deployment corpus is included.
+The optional `/api/room` path stores human messages, exposes cursor/epoch polling and status, and places bounded `TurnRequest` values on an in-memory queue. It does not call a provider or append agent replies. `AgentRuntime` remains an unimplemented protocol seam. This honest separation prevents the transport from masquerading as a working agent room.
+
+## Provider and runtime boundaries
+
+`ModelProvider` is used only by the single-user service. `MockProvider` is deterministic and keyless; `OpenAICompatibleProvider` is server-side and timeout-bounded. Provider output cannot expand the retrieved source jurisdiction.
+
+A future mediated runtime should preserve this flow:
+
+```text
+human RoomMessage ? bounded queue ? gateway-built TurnRequest
+? gateway-controlled public retrieval ? AgentRuntime
+? validated TurnResult ? exactly one agent RoomMessage
+```
+
+External transports, OmegaClaw adapters, durable persistence, WebSockets, and true multi-user orchestration remain deliberately absent.
+
+## Persistence and packaging
+
+Session, room, queue, and idempotency state are in-process and ephemeral. Reset creates a new epoch; process restart loses state. Packaged defaults under `docent.resources` allow an installed wheel to resolve the contract, self-corpus, development manifests, and static assets outside the repository root. Environment path overrides remain supported.
+
+No subject-specific atlas is included.

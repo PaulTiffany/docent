@@ -1,28 +1,18 @@
 # Room protocol
 
-The room API is an optional transport beside the existing `/api/chat` endpoint. It records public human messages and queues generic turn requests without invoking a model.
+The room API is an optional, partial transport beside the working `POST /api/chat` endpoint. It records public human messages and queues generic turn requests; it does **not** invoke a model, connect an agent runtime, or append agent replies.
 
 ## Endpoints
 
 - `GET /api/room/messages?after=<sequence>&epoch=<epoch>` returns messages later than the cursor.
 - `POST /api/room/messages` appends one human message and queues one turn.
 - `GET /api/room/status` returns epoch, latest sequence, connection state, busy state, and queue depth.
-- `POST /api/room/reset` clears room history and queue state and advances the epoch when reset is enabled.
+- `POST /api/room/reset` clears room and queue state and advances the epoch when protected configuration allows it.
 
-## Cursor and epoch semantics
+Sequences are monotonic within an epoch. A fresh read uses `after=0`; a positive cursor must carry its issuing epoch. Missing or stale epoch metadata produces deterministic `409` errors. Reset clears history and idempotency state and creates a new epoch.
 
-Sequences increase monotonically within an epoch. Clients starting fresh use `after=0`; an epoch is optional for that initial read. A positive cursor must include the epoch that issued it. Missing epoch metadata or an earlier epoch produces `409 Conflict` with a stable error code. After reset, clients discard their cursor and begin again at zero.
+An optional idempotency key is scoped to the current epoch. Repeating it returns the original message, allocates no sequence, and queues no second turn. Directed-recipient metadata is preserved but does not cause delivery or execution.
 
-History truncation does not renumber retained messages. A client whose cursor predates retained history receives every retained message later than its cursor.
+Strict Pydantic models bound messages and identifiers. History and queued turns have independent limits. Queue saturation returns `429`; malformed input returns `422`; reset returns `403` outside development/test or when disabled.
 
-## Idempotency
-
-`idempotency_key` is optional and scoped to the current room epoch. Repeating a key returns the original message with `duplicate=true`, does not allocate another sequence, and does not queue another turn. Reset clears the idempotency index.
-
-## Bounds and errors
-
-Message and identifier sizes are enforced by strict Pydantic models. A full turn queue rejects new non-duplicate messages with `429 Too Many Requests`. Malformed inputs use FastAPI's deterministic `422` validation response. Room reset returns `403` unless both the setting and development/test environment permit it.
-
-## Runtime attachment
-
-The in-memory queue contains `TurnRequest` objects. A future runtime adapter may consume them and append validated agent messages through a mediated service, but runtime execution, WebSockets, persistent storage, and provider workers are deliberately deferred.
+A later mediated runtime can consume `TurnQueue`, ask the gateway to build a public `TurnRequest`, call `AgentRuntime`, validate `TurnResult`, and append exactly one agent message. That flow, WebSockets, durable storage, cross-process queues, restart recovery, and true multi-user execution are not implemented.

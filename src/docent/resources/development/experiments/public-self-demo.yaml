@@ -1,0 +1,31 @@
+experiment_id: public-self-demo-2026-08
+title: Living self-docent feedback experiment
+selected_pathway_id: public-self-demo
+hypothesis: A living self-docent will produce more useful design feedback than adding another invisible runtime layer before users can interact with the artifact.
+status: active
+setup:
+  - Publish a deterministic mock-mode self-docent.
+  - Expose authored capabilities, pathways, decisions, experiments, and qualitative pressures.
+  - Keep incomplete runtime and room capabilities explicitly labeled.
+expected_observations:
+  - Visitors ask questions that reveal missing or unclear project explanations.
+  - Human feedback changes the framing or ordering of future pathway decisions.
+completion_evidence:
+  - A public Pages URL is observed.
+  - A public mock Space health endpoint is observed.
+  - At least one real browser-to-Space chat is observed.
+failure_conditions:
+  - The demo implies incomplete capabilities are working.
+  - The site requires a model secret for basic use.
+  - Visitors cannot distinguish authored project state from model inference.
+safety_boundaries:
+  - No development write endpoints.
+  - No automatic pathway selection.
+  - No secret in browser assets.
+  - Public records only enter retrieval.
+observations:
+  - Repository validation passed for manifests, public retrieval, self-corpus, mock chat, frontend generation, packaging, and deployment assets.
+  - An installed wheel served a healthy mock application outside the checkout.
+  - The local Docker CLI was present but its Linux engine was unavailable; GitHub CI subsequently built the non-root image and observed a healthy container.
+  - No public Pages deployment, Space health endpoint, or browser-to-Space chat has been observed.
+result_status: active

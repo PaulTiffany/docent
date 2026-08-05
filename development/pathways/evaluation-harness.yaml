@@ -1,0 +1,24 @@
+pathway_id: evaluation-harness
+title: Evaluation harness
+intent: Measure retrieval, grounding, refusals, and status fidelity against authored cases.
+status: available
+evidence_basis: [Deterministic retrieval and validated envelopes]
+preconditions:
+  - capability_id: deterministic-lexical-retrieval
+    allowed_statuses: [implemented]
+  - capability_id: validated-response-envelopes
+    allowed_statuses: [implemented]
+proposed_changes: [Add authored evaluation cases, Report retrieval and answer-boundary results]
+capabilities_advanced: [deterministic-lexical-retrieval, validated-response-envelopes]
+invariants: [Evaluation cases remain inspectable, No single metric is called objective quality]
+risks: [Overfitting to a small benchmark]
+unresolved_uncertainties: [Representative case selection]
+reversibility: High.
+lock_in_implications: Low.
+completion_evidence: [{evidence_id: eval-report, evidence_type: repository, description: Reproducible evaluation report exists, status: pending}]
+implementation_references: [tests/test_retrieval.py, tests/test_service.py]
+pathways_unlocked: [research-observability]
+pathways_made_harder: []
+decision_history: []
+pressure_profile: {user_visibility: medium, immediate_usefulness: medium, information_gain: high, engineering_cost: medium, operational_cost: low, security_exposure: low, architectural_lock_in: low, reversibility: high, future_option_value: high, dependence_on_external_services: low, authors_note: Authored qualitative profile; no aggregate score is computed.}
+public_explanation: An evaluation harness would make failures inspectable without pretending one score captures docent quality.

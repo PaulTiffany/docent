@@ -10,8 +10,8 @@ test:
 	pytest -q
 
 lint:
-	ruff format --check src tests
-	ruff check src tests
+	ruff format --check src tests tools deploy
+	ruff check src tests tools deploy
 
 audit:
 	python -m docent.content_audit
@@ -19,8 +19,11 @@ audit:
 validate:
 	python -m docent.cli validate
 	python -m docent.content_audit
-	ruff format --check src tests
-	ruff check src tests
+	python -c "from docent.development import validate_main; validate_main()"
+	python tools/frontend.py --check
+	python tools/resources.py --check
+	ruff format --check src tests tools deploy
+	ruff check src tests tools deploy
 	pytest -q
 
 build:

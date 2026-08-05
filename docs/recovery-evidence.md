@@ -29,3 +29,14 @@ This ledger records behavior, not prior collection content. Historical artifacts
 - **confirmed**: directly present in current code or surviving public protocol behavior.
 - **strongly inferred**: supported by multiple operational clues but not a complete surviving implementation.
 - **tentative**: plausible but insufficiently supported; none are promoted into this tranche.
+
+## Current enactment evidence
+
+| Behavior or subsystem | Evidence category | Confidence | Generic interpretation | Implementation status | Related tests | Excluded subject-specific details |
+|---|---|---|---|---|---|---|
+| Development manifests and frontier | Current implementation | confirmed | Authored capabilities and options derive deterministically without automatic selection | implemented | `test_development` | Historical roadmap identities |
+| Public epistemic filtering | Current implementation | confirmed | Non-public records are excluded before scoring and prompting | implemented | `test_public_boundary` | Restricted record content and metadata |
+| Self-docent adapter | Current implementation | confirmed | Public manifests become traceable typed records | implemented | `test_self_docent` | Deleted project corpus |
+| Canonical browser client | Current implementation | confirmed | One source builds FastAPI and Pages assets | implemented, live deployment pending | `test_frontend` | Former hosted UI identity |
+| Hugging Face synchronization | Official documentation and current workflow | strongly inferred | Official Hub API creates/reuses and synchronizes a Docker Space | repository implementation, live validation pending | `test_deployment_assets` | Former Space identifiers |
+| Bellman-style pressures | Current decision structure | confirmed | Qualitative authored pressures expose tradeoffs without claiming optimum | implemented | `test_development` | Hidden developer-memory choices |

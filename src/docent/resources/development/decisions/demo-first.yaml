@@ -1,0 +1,18 @@
+decision_id: demo-first-2026-08-05
+date: 2026-08-05
+status: accepted
+selected_pathway_id: public-self-demo
+context:
+  - The project needs a living object early in development.
+  - The bounded single-user chat path already supports a safe first demonstration.
+  - The shared-room transport is incomplete and must remain visibly incomplete.
+rationale:
+  - A visible artifact can produce useful human feedback before another invisible runtime layer is added.
+  - Deterministic mock mode makes the demonstration testable before model secrets are introduced.
+  - Development pressures and uncertainties should be inspectable rather than hidden in chat history.
+options_preserved: [mediated-in-process-runtime, external-runtime-adapter]
+consequences:
+  - The public-self-demo pathway becomes active.
+  - Live deployment evidence remains pending until observed.
+  - Humans remain responsible for every later pathway selection.
+decided_by: human

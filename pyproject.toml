@@ -31,6 +31,7 @@ dev = [
 docent-validate = "docent.cli:validate_main"
 docent-serve = "docent.cli:serve_main"
 docent-audit = "docent.content_audit:main"
+docent-development-validate = "docent.development:validate_main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
@@ -39,10 +40,17 @@ package-dir = {"" = "src"}
 where = ["src"]
 
 [tool.setuptools.package-data]
-docent = ["static/*.html"]
+docent = [
+  "static/*.html", "static/*.css", "static/*.js", "static/*.json",
+  "resources/config/*.yaml", "resources/corpus/*.jsonl",
+  "resources/development/*.yaml", "resources/development/*.md",
+  "resources/development/pathways/*.yaml",
+  "resources/development/decisions/*.yaml",
+  "resources/development/experiments/*.yaml",
+]
 
 [tool.pytest.ini_options]
-pythonpath = ["src"]
+pythonpath = ["src", "."]
 testpaths = ["tests"]
 asyncio_mode = "auto"
 

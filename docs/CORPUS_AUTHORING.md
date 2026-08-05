@@ -1,6 +1,6 @@
 # Corpus authoring
 
-Each line in `corpus/records.jsonl` must be one JSON object.
+Each line in `corpus/self-docent.jsonl` must be one JSON object.
 
 ## Recommended record types
 
@@ -41,3 +41,9 @@ python -m docent.cli validate
 ```
 
 Validation rejects malformed JSON, unknown fields, invalid enums, blank required fields, and duplicate record IDs.
+
+## Development records
+
+Do not manually duplicate capability or pathway state into the corpus. `development_records.py` converts validated public manifests into reserved `development.*` records at startup. Their source locator preserves the original capability, pathway, decision, or experiment ID and their content labels status and uncertainty.
+
+Public APIs call the public-only retriever. `restricted` and `refuse-extraction` records are never scored for public results and never enter prompts, search payloads, or mock replies. An internal caller must choose the separate explicit retrieval method and must not expose its output.

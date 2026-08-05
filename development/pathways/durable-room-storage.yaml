@@ -1,0 +1,22 @@
+pathway_id: durable-room-storage
+title: Durable room storage
+intent: Persist room messages, epochs, idempotency, queues, and sessions across restarts.
+status: available
+evidence_basis: [RoomStore, TurnQueue, and SessionStore protocols]
+preconditions:
+  - capability_id: shared-room-message-transport
+    allowed_statuses: [partial, implemented]
+proposed_changes: [Implement durable protocol adapters, Add migration and restart tests]
+capabilities_advanced: [durable-persistence]
+invariants: [Stable ordering, Explicit epochs, Bounded retention policy]
+risks: [Migration burden, Privacy retention obligations]
+unresolved_uncertainties: [Preferred storage backend, Retention defaults]
+reversibility: Medium; adapters are replaceable but persisted schemas create obligations.
+lock_in_implications: Medium.
+completion_evidence: [{evidence_id: restart-tests, evidence_type: repository, description: Restart and migration tests pass, status: pending}]
+implementation_references: [src/docent/contracts.py]
+pathways_unlocked: [multi-user-room]
+pathways_made_harder: []
+decision_history: []
+pressure_profile: {user_visibility: low, immediate_usefulness: medium, information_gain: medium, engineering_cost: high, operational_cost: medium, security_exposure: high, architectural_lock_in: medium, reversibility: medium, future_option_value: high, dependence_on_external_services: medium, authors_note: Authored qualitative profile; no aggregate score is computed.}
+public_explanation: Durable state would improve continuity but introduces privacy, schema, and operations obligations.

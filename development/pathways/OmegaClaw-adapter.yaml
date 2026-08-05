@@ -1,0 +1,22 @@
+pathway_id: omegaclaw-adapter
+title: OmegaClaw adapter
+intent: Evaluate a bounded adapter to an explicitly pinned OmegaClaw release after generic runtime contracts stabilize.
+status: blocked
+evidence_basis: [Public-agent experiments informed the design; no dependency is bundled]
+preconditions:
+  - capability_id: external-runtime-adapter
+    allowed_statuses: [implemented]
+proposed_changes: [Pin an upstream release, Map transport and lifecycle, Preserve gateway policy]
+capabilities_advanced: [external-runtime-adapter]
+invariants: [No upstream dependency before generic contracts stabilize, Accurate attribution, Gateway validates publication]
+risks: [Upstream coupling, Capability expansion, security exposure]
+unresolved_uncertainties: [Future upstream release and transport contract]
+reversibility: Medium.
+lock_in_implications: High if generic contracts are bent around one runtime.
+completion_evidence: [{evidence_id: pinned-adapter-audit, evidence_type: repository, description: Pinned adapter and security audit exist, status: pending}]
+implementation_references: [docs/OMEGACLAW.md, ACKNOWLEDGMENTS.md]
+pathways_unlocked: []
+pathways_made_harder: []
+decision_history: []
+pressure_profile: {user_visibility: medium, immediate_usefulness: unknown, information_gain: high, engineering_cost: high, operational_cost: high, security_exposure: high, architectural_lock_in: high, reversibility: medium, future_option_value: medium, dependence_on_external_services: high, authors_note: Authored qualitative profile; no aggregate score is computed.}
+public_explanation: This is deliberately blocked. OmegaClaw is acknowledged as inspiration but is not bundled or running.

@@ -1,0 +1,22 @@
+pathway_id: corpus-authoring-tools
+title: Corpus authoring tools
+intent: Help maintainers create, validate, preview, and revise typed public records.
+status: available
+evidence_basis: [Typed records and corpus validation already exist]
+preconditions:
+  - capability_id: typed-epistemic-records
+    allowed_statuses: [implemented]
+proposed_changes: [Add templates and previews, Add retrieval diagnostics, Add boundary checks]
+capabilities_advanced: [typed-epistemic-records, validated-corpus-loading]
+invariants: [Records remain authored evidence, No secret material in public corpus]
+risks: [Tools may encourage quantity over epistemic quality]
+unresolved_uncertainties: [Best authoring interface]
+reversibility: High.
+lock_in_implications: Low if tools continue emitting the stable record schema.
+completion_evidence: [{evidence_id: authoring-roundtrip, evidence_type: repository, description: Authoring round-trip tests pass, status: pending}]
+implementation_references: [docs/CORPUS_AUTHORING.md, schemas/record.schema.json]
+pathways_unlocked: [evaluation-harness]
+pathways_made_harder: []
+decision_history: []
+pressure_profile: {user_visibility: medium, immediate_usefulness: high, information_gain: medium, engineering_cost: medium, operational_cost: low, security_exposure: low, architectural_lock_in: low, reversibility: high, future_option_value: high, dependence_on_external_services: low, authors_note: Authored qualitative profile; no aggregate score is computed.}
+public_explanation: Better authoring tools could improve evidence quality without changing runtime architecture.
