@@ -14,6 +14,7 @@ def test_public_config_is_strict_safe_and_does_not_fabricate_actual_model(
     monkeypatch.setattr(app_module.settings, "provider", "openai_compatible")
     monkeypatch.setattr(app_module.settings, "api_key", "test-private-key")
     monkeypatch.setattr(app_module.settings, "model", "openrouter/free")
+    monkeypatch.setattr(app_module.settings, "base_url", "https://openrouter.ai/api/v1")
     monkeypatch.setattr(app_module.settings, "app_title", "Docent")
     monkeypatch.setattr(app_module.settings, "allow_deterministic_mode", True)
 
@@ -22,6 +23,7 @@ def test_public_config_is_strict_safe_and_does_not_fabricate_actual_model(
     body = response.json()
     assert body["default_inference_mode"] == "live"
     assert body["enabled_inference_modes"] == ["live", "deterministic"]
+    assert body["provider"] == "openrouter"
     assert body["configured_model"] == "openrouter/free"
     assert "actual_model" not in body
     assert "test-private-key" not in response.text

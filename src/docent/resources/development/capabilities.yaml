@@ -224,11 +224,11 @@ capabilities:
   - capability_id: model-backed-public-chat
     title: Model-backed public chat
     description: The public chat can synthesize across bounded evidence through a configured live provider.
-    status: experimental
-    evidence_basis: [Repository implementation and tests; public live deployment unobserved]
+    status: implemented
+    evidence_basis: [Repository implementation and tests; public live deployment observed on 2026-08-05]
     implementation_references: [src/docent/service.py, src/docent/app.py]
     validation_references: [tests/test_live_inference.py]
-    limitations: [No live OpenRouter browser response has been observed.]
+    limitations: [One live browser-origin OpenRouter response is observed; broader reliability remains under experiment.]
     dependencies: [openai-compatible-provider, validated-response-envelopes]
     public: true
     last_reviewed: "0.3.0-dev"
@@ -246,8 +246,8 @@ capabilities:
   - capability_id: free-tier-inference
     title: Free-tier inference reference deployment
     description: The documented deployment can use an operator-selected free OpenRouter route through the generic provider.
-    status: experimental
-    evidence_basis: [Portable configuration and deployment documentation; live evidence pending]
+    status: implemented
+    evidence_basis: [Portable configuration and deployment documentation; live OpenRouter response observed on 2026-08-05]
     implementation_references: [docs/deployment.md, .env.example]
     validation_references: [tests/test_live_inference.py]
     limitations: [Free-tier availability and limits can change outside this repository.]
