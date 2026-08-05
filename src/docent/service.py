@@ -104,10 +104,15 @@ class DocentService:
         invalid_ids = [
             record_id for record_id in envelope.record_ids if record_id not in allowed_record_ids
         ]
+        valid_ids = list(
+            dict.fromkeys(
+                record_id for record_id in envelope.record_ids if record_id in allowed_record_ids
+            )
+        )
         if invalid_ids:
             logger.warning("Provider invented or used unavailable record IDs: %s", invalid_ids)
-            envelope.record_ids = [
-                record_id for record_id in envelope.record_ids if record_id in allowed_record_ids
-            ]
             envelope.limitations.append("One or more unsupported source identifiers were removed.")
+        envelope.record_ids = valid_ids
+        if not envelope.record_ids:
+            envelope.grounded = False
         return envelope

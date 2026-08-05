@@ -60,6 +60,18 @@ class LexicalRetriever:
     def search(
         self, query: str, limit: int = 6, minimum_score: float = 0.0
     ) -> list[RetrievedRecord]:
+        """Search records that are safe for a public response."""
+        return self._search(query, limit=limit, minimum_score=minimum_score, public_only=True)
+
+    def search_internal(
+        self, query: str, limit: int = 6, minimum_score: float = 0.0
+    ) -> list[RetrievedRecord]:
+        """Explicitly search every record for a future trusted internal caller."""
+        return self._search(query, limit=limit, minimum_score=minimum_score, public_only=False)
+
+    def _search(
+        self, query: str, *, limit: int, minimum_score: float, public_only: bool
+    ) -> list[RetrievedRecord]:
         query_tokens = tokenize(query)
         if not query_tokens:
             return []
@@ -70,6 +82,8 @@ class LexicalRetriever:
         b = 0.75
 
         for item in self.index:
+            if public_only and item.record.answer_policy != "public":
+                continue
             score = 0.0
             reasons: list[str] = []
             for term, qtf in query_counts.items():
@@ -102,10 +116,6 @@ class LexicalRetriever:
 
             score *= _AUTHORITY_WEIGHT[item.record.source.authority]
             score *= _CONFIDENCE_WEIGHT[item.record.confidence]
-            if item.record.answer_policy != "public":
-                score *= 0.25
-                reasons.append("restricted-policy penalty")
-
             # Normalize to an intuitive bounded score without changing ordering.
             bounded_score = score / (score + 5.0) if score > 0 else 0.0
             if bounded_score >= minimum_score:
