@@ -63,6 +63,11 @@ class OpenAICompatibleProvider:
         app_title: str | None = None,
         transport: httpx.AsyncBaseTransport | None = None,
     ) -> None:
+        self.provider_label = (
+            "openrouter"
+            if base_url.rstrip("/").casefold() == "https://openrouter.ai/api/v1"
+            else "openai_compatible"
+        )
         self.api_key = api_key
         self.base_url = base_url.rstrip("/")
         self.configured_model = model

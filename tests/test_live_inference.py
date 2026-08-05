@@ -79,8 +79,10 @@ async def test_openai_compatible_metadata_and_optional_openrouter_headers() -> N
         handler,
         site_url="https://example.test/docent/",
         app_title="Docent",
+        base_url="https://openrouter.ai/api/v1",
     )
     completion = await provider.complete(system_prompt="system", user_prompt="user")
+    assert provider.provider_label == "openrouter"
 
     assert completion.configured_model == "openrouter/free"
     assert completion.actual_model == "provider/actual-free-model"

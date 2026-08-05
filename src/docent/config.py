@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from docent.resources import default_resource, default_resource_root
@@ -41,6 +41,12 @@ class Settings(BaseSettings):
     room_context_limit: int = Field(default=12, ge=0, le=100)
     room_queue_limit: int = Field(default=20, ge=1, le=1000)
     room_reset_enabled: bool = True
+
+    @model_validator(mode="after")
+    def at_least_one_inference_mode(self) -> Settings:
+        if self.provider.casefold() == "mock" and not self.allow_deterministic_mode:
+            raise ValueError("mock-only deployments must enable deterministic mode")
+        return self
 
     @property
     def live_inference_enabled(self) -> bool:

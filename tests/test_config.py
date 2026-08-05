@@ -26,3 +26,10 @@ def test_inference_defaults_and_opaque_model_configuration() -> None:
 
 def test_live_budget_and_app_title_are_bounded() -> None:
     assert Settings(live_daily_budget=45, app_title="Docent").live_daily_budget == 45
+
+
+def test_mock_only_cannot_disable_its_only_mode() -> None:
+    import pytest
+
+    with pytest.raises(ValueError, match="must enable deterministic"):
+        Settings(provider="mock", allow_deterministic_mode=False)

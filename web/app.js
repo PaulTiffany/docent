@@ -45,7 +45,7 @@ async function checkConnection() {
     const config = await response.json(); state.serverConfig = config;
     if (!state.mode || !config.enabled_inference_modes.includes(state.mode)) state.mode = config.default_inference_mode;
     const live = config.live_inference_enabled;
-    const detail = live ? `Live inference via ${config.provider} · configured route: ${config.configured_model}` : "Deterministic corpus mode · no model inference";
+    const detail = live ? `Live inference via ${config.provider === "openrouter" ? "OpenRouter" : config.provider} · configured route: ${config.configured_model}` : "Deterministic corpus mode · no model inference";
     setConnection("ok", "Ready", detail); updateModeControls();
     $("#setup-panel").classList.add("hidden");
   } catch (error) {
