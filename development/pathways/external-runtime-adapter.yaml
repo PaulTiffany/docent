@@ -1,0 +1,22 @@
+pathway_id: external-runtime-adapter
+title: External runtime adapter
+intent: Execute typed turns in a separately operated runtime while preserving gateway validation.
+status: blocked
+evidence_basis: [AgentRuntime protocol and deployment evidence]
+preconditions:
+  - capability_id: mediated-room-runtime
+    allowed_statuses: [implemented, experimental]
+proposed_changes: [Define transport, Add health-gated attachment, Add capped reconnect behavior]
+capabilities_advanced: [external-runtime-adapter]
+invariants: [Gateway remains publication boundary, No runtime receives unrestricted corpus access]
+risks: [Operational coupling, Authentication and reconnect failures]
+unresolved_uncertainties: [Transport choice, Runtime lifecycle contract]
+reversibility: Medium; protocol choices can be replaced but deployed integrations create compatibility obligations.
+lock_in_implications: Medium to high depending on transport and runtime assumptions.
+completion_evidence: [{evidence_id: external-contract-tests, evidence_type: repository, description: Contract and failure integration tests pass, status: pending}]
+implementation_references: [src/docent/contracts.py]
+pathways_unlocked: [omegaclaw-adapter]
+pathways_made_harder: []
+decision_history: []
+pressure_profile: {user_visibility: low, immediate_usefulness: medium, information_gain: high, engineering_cost: high, operational_cost: high, security_exposure: high, architectural_lock_in: medium, reversibility: medium, future_option_value: high, dependence_on_external_services: high, authors_note: Authored qualitative profile; no aggregate score is computed.}
+public_explanation: This remains blocked until mediated runtime semantics exist and are tested independently of external transport.

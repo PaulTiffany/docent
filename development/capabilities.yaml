@@ -1,0 +1,222 @@
+capabilities:
+  - capability_id: typed-epistemic-records
+    title: Typed epistemic records
+    description: Source claims are represented as complete, strictly typed records.
+    status: implemented
+    evidence_basis: [DocentRecord and the public JSON schema]
+    implementation_references: [src/docent/models.py, schemas/record.schema.json]
+    validation_references: [tests/test_corpus.py]
+    limitations: [The schema vocabulary remains intentionally small.]
+    dependencies: []
+    public: true
+    last_reviewed: "0.2.0"
+  - capability_id: validated-corpus-loading
+    title: Validated corpus loading
+    description: JSONL records are validated and duplicate record IDs are rejected at startup.
+    status: implemented
+    evidence_basis: [Corpus loader and corpus test]
+    implementation_references: [src/docent/corpus.py]
+    validation_references: [tests/test_corpus.py]
+    limitations: [The reference loader reads the corpus into memory.]
+    dependencies: [typed-epistemic-records]
+    public: true
+    last_reviewed: "0.2.0"
+  - capability_id: deterministic-lexical-retrieval
+    title: Deterministic lexical retrieval
+    description: A bounded BM25-style ranker retrieves complete records without network access.
+    status: implemented
+    evidence_basis: [LexicalRetriever and retrieval tests]
+    implementation_references: [src/docent/retrieval.py]
+    validation_references: [tests/test_retrieval.py]
+    limitations: [Lexical retrieval does not provide semantic embeddings.]
+    dependencies: [validated-corpus-loading]
+    public: true
+    last_reviewed: "0.2.0"
+  - capability_id: bounded-single-user-chat
+    title: Bounded single-user chat
+    description: One request produces one source-grounded response through the gateway.
+    status: implemented
+    evidence_basis: [The /api/chat route and DocentService]
+    implementation_references: [src/docent/app.py, src/docent/service.py]
+    validation_references: [tests/test_service.py, tests/test_room.py]
+    limitations: [Session history is process-local.]
+    dependencies: [deterministic-lexical-retrieval, validated-response-envelopes]
+    public: true
+    last_reviewed: "0.2.0"
+  - capability_id: validated-response-envelopes
+    title: Validated response envelopes
+    description: Provider output is parsed into a bounded public response and source IDs are checked.
+    status: implemented
+    evidence_basis: [DocentEnvelope and DocentService validation]
+    implementation_references: [src/docent/models.py, src/docent/service.py]
+    validation_references: [tests/test_service.py]
+    limitations: [Public-only filtering is being strengthened in this enactment.]
+    dependencies: [typed-epistemic-records]
+    public: true
+    last_reviewed: "0.2.0"
+  - capability_id: bounded-session-transcript
+    title: Bounded session transcript
+    description: Recent single-user messages are retained under a configured cap.
+    status: implemented
+    evidence_basis: [SessionHistory]
+    implementation_references: [src/docent/history.py]
+    validation_references: [tests/test_service.py]
+    limitations: [The bound counts messages rather than complete turns.]
+    dependencies: []
+    public: true
+    last_reviewed: "0.2.0"
+  - capability_id: mock-provider
+    title: Deterministic mock provider
+    description: The top retrieved record is returned without requiring a model key.
+    status: implemented
+    evidence_basis: [MockProvider]
+    implementation_references: [src/docent/providers/mock.py]
+    validation_references: [tests/test_service.py]
+    limitations: [It does not synthesize across several records.]
+    dependencies: [validated-response-envelopes]
+    public: true
+    last_reviewed: "0.2.0"
+  - capability_id: openai-compatible-provider
+    title: OpenAI-compatible provider
+    description: The gateway can call a configured chat-completions-compatible service.
+    status: implemented
+    evidence_basis: [OpenAICompatibleProvider and provider factory]
+    implementation_references: [src/docent/providers/openai_compatible.py, src/docent/providers/factory.py]
+    validation_references: [tests/test_service.py]
+    limitations: [No live provider integration test is included.]
+    dependencies: [validated-response-envelopes]
+    public: true
+    last_reviewed: "0.2.0"
+    uncertainty_notes: [Provider-specific compatibility varies.]
+  - capability_id: health-endpoint
+    title: Health endpoint
+    description: The gateway exposes process readiness and safe public configuration facts.
+    status: implemented
+    evidence_basis: [GET /health]
+    implementation_references: [src/docent/app.py]
+    validation_references: [tests/test_room.py]
+    limitations: [It does not probe upstream provider availability.]
+    dependencies: [validated-corpus-loading]
+    public: true
+    last_reviewed: "0.2.0"
+  - capability_id: docker-packaging
+    title: Docker packaging
+    description: A Docker image definition and Compose configuration run the ASGI gateway on port 7860.
+    status: partial
+    evidence_basis: [Dockerfile and Compose configuration]
+    implementation_references: [Dockerfile, compose.yaml]
+    validation_references: [.github/workflows/ci.yml]
+    limitations: [The tranche-1 image runs as root and was not locally built.]
+    dependencies: [health-endpoint]
+    public: true
+    last_reviewed: "0.2.0"
+  - capability_id: shared-room-message-transport
+    title: Shared-room message transport
+    description: HTTP endpoints store bounded room messages and expose status without running an agent.
+    status: partial
+    evidence_basis: [Room routes and SharedRoomService]
+    implementation_references: [src/docent/app.py, src/docent/room.py]
+    validation_references: [tests/test_room.py]
+    limitations: [No runtime consumes queued turns; this is not a functioning agent room.]
+    dependencies: [bounded-pending-turn-queue]
+    public: true
+    last_reviewed: "0.2.0"
+  - capability_id: room-cursor-epoch-semantics
+    title: Room cursor and epoch semantics
+    description: Polling cursors are scoped to an explicit room epoch and stale epochs are rejected.
+    status: implemented
+    evidence_basis: [InMemoryRoomStore]
+    implementation_references: [src/docent/room.py]
+    validation_references: [tests/test_room.py]
+    limitations: [Epoch identity is process-local.]
+    dependencies: []
+    public: true
+    last_reviewed: "0.2.0"
+  - capability_id: room-idempotency
+    title: Room idempotency
+    description: Repeated client keys return the original message without another sequence or queue item.
+    status: implemented
+    evidence_basis: [SharedRoomService duplicate handling]
+    implementation_references: [src/docent/room.py]
+    validation_references: [tests/test_room.py]
+    limitations: [The in-memory idempotency index is not independently bounded.]
+    dependencies: [room-cursor-epoch-semantics]
+    public: true
+    last_reviewed: "0.2.0"
+  - capability_id: bounded-pending-turn-queue
+    title: Bounded pending-turn queue
+    description: Room insertions enqueue bounded typed turn requests in process memory.
+    status: implemented
+    evidence_basis: [InMemoryTurnQueue]
+    implementation_references: [src/docent/room.py, src/docent/contracts.py]
+    validation_references: [tests/test_room.py]
+    limitations: [The queued request has no retrieved records and no consumer.]
+    dependencies: []
+    public: true
+    last_reviewed: "0.2.0"
+  - capability_id: mediated-room-runtime
+    title: Mediated room runtime
+    description: A gateway worker would retrieve evidence, execute a runtime, validate output, and append one agent message.
+    status: absent
+    evidence_basis: [Architecture review records this as deferred]
+    implementation_references: [src/docent/contracts.py]
+    validation_references: [docs/architecture.md]
+    limitations: [No orchestrator or runtime implementation exists.]
+    dependencies: [bounded-pending-turn-queue, deterministic-lexical-retrieval]
+    public: true
+    last_reviewed: "0.2.0"
+  - capability_id: external-runtime-adapter
+    title: External runtime adapter
+    description: A future adapter could execute typed turns outside the gateway process.
+    status: absent
+    evidence_basis: [AgentRuntime protocol only]
+    implementation_references: [src/docent/contracts.py]
+    validation_references: [docs/architecture.md]
+    limitations: [No transport, reconnect loop, or external process exists.]
+    dependencies: [mediated-room-runtime]
+    public: true
+    last_reviewed: "0.2.0"
+  - capability_id: durable-persistence
+    title: Durable persistence
+    description: Durable room, queue, idempotency, and session storage across process restarts.
+    status: absent
+    evidence_basis: [In-memory stores are explicitly documented]
+    implementation_references: [src/docent/room.py, src/docent/history.py]
+    validation_references: [docs/architecture.md]
+    limitations: [All current operational state is ephemeral.]
+    dependencies: []
+    public: true
+    last_reviewed: "0.2.0"
+  - capability_id: public-self-demo
+    title: Public self-docent demo
+    description: A public visitor can ask Docent about Docent and inspect its authored development frontier.
+    status: absent
+    evidence_basis: [Selected enactment; implementation not yet complete]
+    implementation_references: []
+    validation_references: []
+    limitations: [No public Pages or Space deployment has been observed.]
+    dependencies: [bounded-single-user-chat, mock-provider]
+    public: true
+    last_reviewed: "0.2.0"
+  - capability_id: development-pathway-model
+    title: Development pathway model
+    description: Typed manifests expose capabilities, pathways, decisions, experiments, and qualitative pressures.
+    status: experimental
+    evidence_basis: [Initial manifest model in this branch]
+    implementation_references: [src/docent/development.py, development/README.md]
+    validation_references: [development/README.md]
+    limitations: [The model is authored evidence and does not optimize the roadmap.]
+    dependencies: []
+    public: true
+    last_reviewed: "0.3.0-dev"
+  - capability_id: multi-user-room
+    title: Multi-user agent room
+    description: Authenticated participants share a durable room with mediated agent execution.
+    status: absent
+    evidence_basis: [Explicitly outside the current scope]
+    implementation_references: [docs/room-protocol.md]
+    validation_references: [tests/test_room.py]
+    limitations: [Current sender IDs are unverified and no runtime executes.]
+    dependencies: [mediated-room-runtime, durable-persistence]
+    public: true
+    last_reviewed: "0.2.0"
