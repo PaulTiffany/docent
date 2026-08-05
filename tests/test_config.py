@@ -33,3 +33,13 @@ def test_mock_only_cannot_disable_its_only_mode() -> None:
 
     with pytest.raises(ValueError, match="must enable deterministic"):
         Settings(provider="mock", allow_deterministic_mode=False)
+
+
+def test_openrouter_public_label_normalizes_operator_whitespace() -> None:
+    settings = Settings(
+        provider="openai_compatible",
+        api_key="test-only",
+        base_url=" https://openrouter.ai/api/v1/ ",
+        model="openrouter/free",
+    )
+    assert settings.public_provider_label == "openrouter"

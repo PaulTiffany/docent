@@ -65,7 +65,7 @@ class OpenAICompatibleProvider:
     ) -> None:
         self.provider_label = (
             "openrouter"
-            if base_url.rstrip("/").casefold() == "https://openrouter.ai/api/v1"
+            if base_url.strip().rstrip("/").casefold() == "https://openrouter.ai/api/v1"
             else "openai_compatible"
         )
         self.api_key = api_key

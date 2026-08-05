@@ -56,7 +56,7 @@ class Settings(BaseSettings):
     def public_provider_label(self) -> str:
         if self.provider.casefold() == "mock":
             return "mock"
-        if self.base_url.rstrip("/").casefold() == "https://openrouter.ai/api/v1":
+        if self.base_url.strip().rstrip("/").casefold() == "https://openrouter.ai/api/v1":
             return "openrouter"
         return "openai_compatible"
 
