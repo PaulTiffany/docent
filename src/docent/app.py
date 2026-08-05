@@ -110,7 +110,7 @@ async def public_config() -> PublicConfig:
         live_inference_enabled=settings.live_inference_enabled,
         deterministic_mode_enabled=settings.allow_deterministic_mode,
         enabled_inference_modes=modes,
-        provider=settings.provider,
+        provider=settings.public_provider_label,
         configured_model=settings.model
         if settings.live_inference_enabled
         else "deterministic-corpus",

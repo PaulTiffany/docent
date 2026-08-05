@@ -23,10 +23,10 @@ completion_evidence:
   - {evidence_id: frontend-mode-tests, evidence_type: repository, description: Frontend mode and secret-boundary tests pass, status: satisfied}
   - {evidence_id: documentation, evidence_type: repository, description: Deployment and security documentation exists, status: satisfied}
   - {evidence_id: branch-ci, evidence_type: repository, description: Branch CI is green, status: satisfied}
-  - {evidence_id: space-live-config, evidence_type: live, description: Hugging Face reports live inference enabled, status: pending}
-  - {evidence_id: pages-live-config, evidence_type: live, description: Pages retrieves the live configuration, status: pending}
-  - {evidence_id: browser-live-answer, evidence_type: live, description: Browser-to-Space synthesis succeeds with actual model and supporting records, status: pending}
-  - {evidence_id: deterministic-still-explicit, evidence_type: live, description: Deterministic mode remains explicitly selectable and labeled, status: pending}
+  - {evidence_id: space-live-config, evidence_type: live, description: Hugging Face reports live inference enabled, status: satisfied}
+  - {evidence_id: pages-live-config, evidence_type: live, description: Pages retrieves the live configuration, status: satisfied}
+  - {evidence_id: browser-live-answer, evidence_type: live, description: Browser-to-Space synthesis succeeds with actual model and supporting records, status: satisfied}
+  - {evidence_id: deterministic-still-explicit, evidence_type: live, description: Deterministic mode remains explicitly selectable and labeled, status: satisfied}
   - {evidence_id: environment-model-switch, evidence_type: live, description: A model switch using only DOCENT_MODEL is observed if practical, status: pending}
 implementation_references: [src/docent/providers/openai_compatible.py, src/docent/service.py, web/app.js]
 pathways_unlocked: [evaluation-harness, research-observability]

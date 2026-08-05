@@ -53,6 +53,14 @@ class Settings(BaseSettings):
         return self.provider.casefold() == "openai_compatible" and bool(self.api_key)
 
     @property
+    def public_provider_label(self) -> str:
+        if self.provider.casefold() == "mock":
+            return "mock"
+        if self.base_url.rstrip("/").casefold() == "https://openrouter.ai/api/v1":
+            return "openrouter"
+        return "openai_compatible"
+
+    @property
     def default_inference_mode(self) -> str:
         return "live" if self.live_inference_enabled else "deterministic"
 
