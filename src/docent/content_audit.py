@@ -2,7 +2,16 @@ from __future__ import annotations
 
 from pathlib import Path
 
-DEFAULT_SCAN_ROOTS = ("src", "config", "schemas", "examples", "tests/fixtures")
+DEFAULT_SCAN_ROOTS = (
+    "src",
+    "config",
+    "schemas",
+    "examples",
+    "tests/fixtures",
+    "development",
+    "web",
+    "deploy",
+)
 
 
 def load_denylist(path: Path) -> list[str]:

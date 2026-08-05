@@ -8,18 +8,21 @@ import yaml
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from docent.resources import default_resource, default_resource_root
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_prefix="DOCENT_", extra="ignore")
 
-    name: str = "Example Docent"
-    description: str = "A bounded guide to the configured collection."
+    name: str = "Docent"
+    description: str = "A bounded guide to Docent and its public development frontier."
     provider: str = "mock"
     model: str = "gpt-4.1-mini"
     api_key: str | None = None
     base_url: str = "https://api.openai.com/v1"
-    corpus_path: Path = Path("corpus/records.jsonl")
-    contract_path: Path = Path("config/docent.yaml")
+    corpus_path: Path = Field(default_factory=lambda: default_resource("corpus/self-docent.jsonl"))
+    contract_path: Path = Field(default_factory=lambda: default_resource("config/docent.yaml"))
+    development_root: Path = Field(default_factory=default_resource_root)
     history_limit: int = Field(default=5, ge=0, le=20)
     retrieval_limit: int = Field(default=6, ge=1, le=20)
     min_retrieval_score: float = Field(default=0.05, ge=0)

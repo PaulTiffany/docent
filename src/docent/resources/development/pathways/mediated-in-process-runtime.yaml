@@ -1,0 +1,24 @@
+pathway_id: mediated-in-process-runtime
+title: Mediated in-process runtime
+intent: Consume pending room turns through gateway-controlled retrieval, runtime execution, validation, and one agent message.
+status: available
+evidence_basis: [AgentRuntime and queue protocols already exist]
+preconditions:
+  - capability_id: bounded-pending-turn-queue
+    allowed_statuses: [implemented]
+  - capability_id: deterministic-lexical-retrieval
+    allowed_statuses: [implemented]
+proposed_changes: [Introduce a pending-turn contract, Add an in-process runtime, Reuse public response validation]
+capabilities_advanced: [mediated-room-runtime, shared-room-message-transport]
+invariants: [Gateway owns retrieval, Runtime cannot publish directly, One triggering message yields at most one agent message]
+risks: [Worker lifecycle complexity, Accidental confusion between partial transport and an agent room]
+unresolved_uncertainties: [Best pending-turn ownership boundary]
+reversibility: High while kept in process and behind AgentRuntime.
+lock_in_implications: Low to medium; it establishes orchestration semantics but not an external transport.
+completion_evidence: [{evidence_id: mediated-runtime-tests, evidence_type: repository, description: Mediated execution and failure tests pass, status: pending}]
+implementation_references: [src/docent/contracts.py, src/docent/room.py]
+pathways_unlocked: [external-runtime-adapter, multi-user-room]
+pathways_made_harder: []
+decision_history: []
+pressure_profile: {user_visibility: medium, immediate_usefulness: medium, information_gain: high, engineering_cost: medium, operational_cost: low, security_exposure: medium, architectural_lock_in: low, reversibility: high, future_option_value: high, dependence_on_external_services: low, authors_note: Authored qualitative profile; no aggregate score is computed.}
+public_explanation: This would make the partial room transport execute bounded turns without choosing an external runtime technology.

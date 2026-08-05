@@ -1,0 +1,49 @@
+pathway_id: public-self-demo
+title: Public self-docent demo
+intent: Make the project a living bounded docent and a public view of its authored development options.
+status: active
+evidence_basis: [Human decision demo-first-2026-08-05, Existing bounded chat and mock provider]
+preconditions:
+  - capability_id: bounded-single-user-chat
+    allowed_statuses: [implemented]
+  - capability_id: mock-provider
+    allowed_statuses: [implemented]
+proposed_changes: [Add development manifests and APIs, Add a self-docent corpus adapter, Build one canonical frontend, Add reproducible Pages and Space deployment]
+capabilities_advanced: [public-self-demo, development-pathway-model, docker-packaging]
+invariants: [Humans select pathways, No claim of objective optimality, Public evidence only, Incomplete room runtime stays visibly incomplete, Mock mode requires no model secret]
+risks: [Public UI may outrun deployment readiness, Self-description may become stale]
+unresolved_uncertainties: [How visitors use the frontier, Whether public feedback changes the next human decision]
+reversibility: High; the demo and manifests can be revised without committing to a runtime topology.
+lock_in_implications: Low architectural lock-in; it preserves both mediated and external runtime options.
+completion_evidence:
+  - {evidence_id: development-validation, evidence_type: repository, description: Development manifests validate, status: pending}
+  - {evidence_id: public-retrieval-tests, evidence_type: repository, description: Public-only retrieval tests pass, status: pending}
+  - {evidence_id: self-corpus-validation, evidence_type: repository, description: Default self-docent corpus validates, status: pending}
+  - {evidence_id: local-mock-chat, evidence_type: repository, description: Local mock chat works end to end, status: pending}
+  - {evidence_id: frontend-reproducible, evidence_type: repository, description: Canonical frontend build is reproducible, status: pending}
+  - {evidence_id: pages-workflow, evidence_type: repository, description: Pages workflow exists and validates, status: pending}
+  - {evidence_id: docker-ci, evidence_type: repository, description: Docker image builds in CI, status: pending}
+  - {evidence_id: hf-workflow, evidence_type: repository, description: Hugging Face workflow exists and validates, status: pending}
+  - {evidence_id: frontend-secret-audit, evidence_type: repository, description: Frontend assets contain no secret, status: pending}
+  - {evidence_id: container-health, evidence_type: repository, description: Health works in the built container, status: pending}
+  - {evidence_id: deployment-docs, evidence_type: repository, description: Deployment documentation exists, status: pending}
+  - {evidence_id: pages-live, evidence_type: live, description: Public Pages URL is observed, status: pending}
+  - {evidence_id: space-health-live, evidence_type: live, description: Public Hugging Face health endpoint is observed, status: pending}
+  - {evidence_id: browser-space-chat-live, evidence_type: live, description: One browser-to-Space chat is observed, status: pending}
+implementation_references: [development/README.md, src/docent/development.py]
+pathways_unlocked: [evaluation-harness, research-observability]
+pathways_made_harder: []
+decision_history: [development/decisions/demo-first.yaml]
+pressure_profile:
+  user_visibility: high
+  immediate_usefulness: high
+  information_gain: high
+  engineering_cost: medium
+  operational_cost: low
+  security_exposure: medium
+  architectural_lock_in: low
+  reversibility: high
+  future_option_value: high
+  dependence_on_external_services: medium
+  authors_note: These are qualitative pressures supporting human deliberation, not an aggregate score.
+public_explanation: This pathway was selected by a human to expose a useful living object before deeper invisible runtime work. It is not claimed to be optimal.

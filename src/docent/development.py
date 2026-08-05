@@ -259,6 +259,7 @@ def validate_development_manifest(manifest: DevelopmentManifest, root: Path) -> 
     pathway_ids = [item.pathway_id for item in manifest.pathways]
     decision_ids = [item.decision_id for item in manifest.decisions]
     experiment_ids = [item.experiment_id for item in manifest.experiments]
+    check_evidence_files = (root / "pyproject.toml").exists()
     for label, values in (
         ("capability", capability_ids),
         ("pathway", pathway_ids),
@@ -277,7 +278,7 @@ def validate_development_manifest(manifest: DevelopmentManifest, root: Path) -> 
         for reference in capability.implementation_references + capability.validation_references:
             if not _safe_reference(reference):
                 errors.append(f"{capability.capability_id}: unsafe reference {reference}")
-            elif not (root / reference).exists():
+            elif check_evidence_files and not (root / reference).exists():
                 errors.append(f"{capability.capability_id}: missing evidence reference {reference}")
 
     for pathway in manifest.pathways:

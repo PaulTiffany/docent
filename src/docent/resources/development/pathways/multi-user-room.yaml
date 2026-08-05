@@ -1,0 +1,24 @@
+pathway_id: multi-user-room
+title: Multi-user room
+intent: Support authenticated participants sharing durable mediated agent execution.
+status: blocked
+evidence_basis: [Current room transport is explicitly partial]
+preconditions:
+  - capability_id: mediated-room-runtime
+    allowed_statuses: [implemented]
+  - capability_id: durable-persistence
+    allowed_statuses: [implemented]
+proposed_changes: [Add identity and authorization, Define moderation and retention, Build a production room UI]
+capabilities_advanced: [multi-user-room]
+invariants: [No fake agent room, Explicit participant identity, Mediated publication]
+risks: [Abuse, privacy, moderation, concurrency]
+unresolved_uncertainties: [Identity provider, Moderation model, Retention policy]
+reversibility: Low to medium once public users and retained data exist.
+lock_in_implications: High.
+completion_evidence: [{evidence_id: multi-user-safety, evidence_type: repository, description: Concurrency authorization and abuse tests pass, status: pending}]
+implementation_references: [src/docent/room.py]
+pathways_unlocked: []
+pathways_made_harder: []
+decision_history: []
+pressure_profile: {user_visibility: high, immediate_usefulness: high, information_gain: high, engineering_cost: high, operational_cost: high, security_exposure: high, architectural_lock_in: high, reversibility: low, future_option_value: medium, dependence_on_external_services: high, authors_note: Authored qualitative profile; no aggregate score is computed.}
+public_explanation: This is not available now; the current room endpoints are transport scaffolding, not a functioning multi-user agent room.

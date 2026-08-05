@@ -6,9 +6,20 @@ from pathlib import Path
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from docent.config import get_settings, load_contract
 from docent.corpus import load_records
+from docent.development import (
+    CapabilityRecord,
+    DecisionRecord,
+    DevelopmentFrontier,
+    ExperimentRecord,
+    PathwayRecord,
+    derive_development_frontier,
+    load_development_manifest,
+)
+from docent.development_records import development_records
 from docent.history import SessionHistory
 from docent.models import (
     ChatRequest,
@@ -39,7 +50,9 @@ logging.basicConfig(level=getattr(logging, settings.log_level.upper(), logging.I
 logger = logging.getLogger(__name__)
 
 contract = load_contract(settings.contract_path)
-records = load_records(settings.corpus_path)
+development_manifest = load_development_manifest(settings.development_root)
+development_frontier = derive_development_frontier(development_manifest)
+records = load_records(settings.corpus_path) + development_records(development_manifest)
 retriever = LexicalRetriever(records)
 provider = build_provider(settings)
 history = SessionHistory(settings.history_limit)
@@ -83,6 +96,53 @@ async def public_config() -> dict:
         "description": settings.description,
         "provider": settings.provider,
     }
+
+
+@app.get("/api/development/capabilities", response_model=list[CapabilityRecord])
+async def development_capabilities() -> list[CapabilityRecord]:
+    return sorted(development_manifest.capabilities, key=lambda item: item.capability_id)
+
+
+@app.get("/api/development/capabilities/{capability_id}", response_model=CapabilityRecord)
+async def development_capability(capability_id: str) -> CapabilityRecord:
+    for capability in development_manifest.capabilities:
+        if capability.capability_id == capability_id:
+            return capability
+    raise HTTPException(
+        status_code=404,
+        detail={"code": "capability_not_found", "message": "Unknown capability ID."},
+    )
+
+
+@app.get("/api/development/pathways", response_model=list[PathwayRecord])
+async def development_pathways() -> list[PathwayRecord]:
+    return sorted(development_manifest.pathways, key=lambda item: item.pathway_id)
+
+
+@app.get("/api/development/pathways/{pathway_id}", response_model=PathwayRecord)
+async def development_pathway(pathway_id: str) -> PathwayRecord:
+    for pathway in development_manifest.pathways:
+        if pathway.pathway_id == pathway_id:
+            return pathway
+    raise HTTPException(
+        status_code=404,
+        detail={"code": "pathway_not_found", "message": "Unknown pathway ID."},
+    )
+
+
+@app.get("/api/development/frontier", response_model=DevelopmentFrontier)
+async def development_state_frontier() -> DevelopmentFrontier:
+    return development_frontier
+
+
+@app.get("/api/development/decisions", response_model=list[DecisionRecord])
+async def development_decisions() -> list[DecisionRecord]:
+    return sorted(development_manifest.decisions, key=lambda item: item.decision_id)
+
+
+@app.get("/api/development/experiments", response_model=list[ExperimentRecord])
+async def development_experiments() -> list[ExperimentRecord]:
+    return sorted(development_manifest.experiments, key=lambda item: item.experiment_id)
 
 
 @app.post("/api/search", response_model=SearchResponse)
@@ -162,3 +222,6 @@ async def reset_room() -> RoomResetResponse:
 @app.get("/", include_in_schema=False)
 async def index() -> FileResponse:
     return FileResponse(STATIC_DIR / "index.html")
+
+
+app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
