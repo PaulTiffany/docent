@@ -13,6 +13,14 @@ def test_dockerfile_runs_as_non_root_and_preserves_port_and_health() -> None:
     assert "127.0.0.1:7860/health" in dockerfile
     assert "COPY development ./development" in dockerfile
 
+    space_readme = (ROOT / "deploy" / "huggingface" / "README.md").read_text(encoding="utf-8")
+    short_description = next(
+        line.removeprefix("short_description: ")
+        for line in space_readme.splitlines()
+        if line.startswith("short_description: ")
+    )
+    assert len(short_description) <= 60
+
 
 def test_space_staging_contains_only_intended_runtime_content(
     tmp_path: Path,

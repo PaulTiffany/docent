@@ -6,7 +6,7 @@ colorTo: yellow
 sdk: docker
 app_port: 7860
 fullWidth: true
-short_description: A bounded self-docent with an inspectable development frontier
+short_description: A bounded self-docent with a visible project frontier
 ---
 
 # Docent self-demo
