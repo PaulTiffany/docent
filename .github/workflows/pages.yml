@@ -1,0 +1,40 @@
+name: Deploy Pages demo
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build public Pages artifact
+        env:
+          PUBLIC_API_BASE_URL: ${{ vars.DOCENT_API_BASE_URL }}
+        run: python tools/frontend.py --output _site --api-base-url "$PUBLIC_API_BASE_URL"
+      - name: Validate generated public configuration
+        run: python -c "import json; from pathlib import Path; from tools.frontend import validate_public_config; validate_public_config(json.loads(Path('_site/config.json').read_text()))"
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -9,9 +9,12 @@ COPY pyproject.toml README.md LICENSE NOTICE ACKNOWLEDGMENTS.md ./
 COPY src ./src
 COPY config ./config
 COPY corpus ./corpus
+COPY development ./development
 COPY schemas ./schemas
 
-RUN pip install --no-cache-dir .
+RUN pip install --no-cache-dir . && useradd --create-home --uid 10001 docent
+
+USER docent
 
 EXPOSE 7860
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
