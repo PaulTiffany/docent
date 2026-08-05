@@ -1,43 +1,81 @@
 # Deployment
 
+The same installed package runs locally, in Docker, or in a Hugging Face Docker Space. The static client is served by FastAPI or GitHub Pages.
+
 ## Local
 
 ```bash
-cp .env.example .env
 python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
-pip install -e '.[dev]'
-make validate
-make run
+# Windows: .venv\Scripts\activate
+# macOS/Linux: source .venv/bin/activate
+pip install -e ".[dev]"
+docent-validate
+docent-development-validate
+docent-serve
 ```
 
-The mock provider requires no key. `/api/chat` is immediately usable. The shared room is also available but has no runtime worker in this tranche, so queued turns remain queued until reset or process restart.
+Open <http://localhost:7860>. `DOCENT_PROVIDER=mock` is the default and needs no secret.
 
 ## Docker
 
 ```bash
-cp .env.example .env
-docker compose up --build
+docker build -t docent .
+docker run --rm -p 7860:7860 \
+  -e DOCENT_ENVIRONMENT=production \
+  -e DOCENT_PROVIDER=mock \
+  -e DOCENT_ALLOWED_ORIGINS=https://paultiffany.github.io \
+  -e DOCENT_ROOM_RESET_ENABLED=false \
+  docent
 ```
 
-The image runs as a non-root user, listens on port `7860`, and includes configuration and example corpus files. Mount deployment corpora read-only.
+The image runs as unprivileged user `docent`, exposes port 7860, and health-checks `/health`. Default contract, self-corpus, development manifests, and frontend assets are both present in the image and packaged in the wheel. All in-memory state is ephemeral.
+
+## GitHub Pages
+
+`.github/workflows/pages.yml` builds only the canonical public assets and deploys with the supported Pages actions. Enable **Settings ? Pages ? Source: GitHub Actions** once. The workflow uses optional repository variable `DOCENT_API_BASE_URL`; no secret is required. When absent, the site displays setup guidance and accepts a local public-URL override.
+
+Expected URL after a successful main deployment: <https://paultiffany.github.io/docent/>. This repository does not claim it is live until observed.
 
 ## Hugging Face Docker Space
 
-Create a generic Docker Space from this repository. Keep provider credentials in Space secrets, not variables or source files. The container port is `7860`, and `/health` is the readiness endpoint. Ephemeral in-memory room/session state may disappear whenever the Space sleeps or restarts.
+Official references: [Docker Spaces](https://huggingface.co/docs/hub/spaces-sdks-docker), [Spaces variables and secrets](https://huggingface.co/docs/hub/spaces-overview), and [`HfApi.upload_folder`](https://huggingface.co/docs/huggingface_hub/en/package_reference/hf_api).
 
-Set `DOCENT_ENVIRONMENT=production` in public deployments. This disables room reset even if `DOCENT_ROOM_RESET_ENABLED` is accidentally true. Configure allowed origins, history/queue bounds, timeouts, and rate limits explicitly.
+`deploy/huggingface/README.md` supplies `sdk: docker` and `app_port: 7860`. The manual **Synchronize Hugging Face Space** workflow validates `HF_SPACE_ID`, creates or reuses the configured Space through the official Hub API, stages only intended runtime files, replaces stale remote files, and never stages the token.
 
-## Future external runtime
+GitHub Actions configuration:
 
-A later runtime process should wait for `/health`, attach through the documented runtime/queue contracts, and reconnect with capped exponential backoff. That adapter must not receive gateway credentials or bypass retrieval and response validation. No external runtime or WebSocket channel is included now.
+- secret `HF_TOKEN`: narrowly scoped write token for the intended Space;
+- variable `HF_SPACE_ID`: `owner/name`;
+- optional variable `DOCENT_API_BASE_URL`: public Space origin for Pages.
 
-## Operational checks
+Mock Space variables:
 
-- Run corpus validation, content audit, Ruff format/check, and pytest.
-- Exercise one supported and unsupported `/api/chat` question.
-- Exercise room idempotency, queue saturation, reset authorization, and stale-epoch behavior.
-- Confirm provider failures remain generic `503` responses.
-- Treat session and room memory as ephemeral unless durable adapters are installed.
+```text
+DOCENT_ENVIRONMENT=production
+DOCENT_PROVIDER=mock
+DOCENT_ALLOWED_ORIGINS=https://paultiffany.github.io
+DOCENT_ROOM_RESET_ENABLED=false
+```
 
-This repository contains no subject-specific atlas or recovered deployment corpus.
+No model secret is required.
+
+Model-backed Space variables:
+
+```text
+DOCENT_PROVIDER=openai_compatible
+DOCENT_MODEL=<chosen model>
+DOCENT_BASE_URL=<provider API base>
+DOCENT_ALLOWED_ORIGINS=https://paultiffany.github.io
+DOCENT_ENVIRONMENT=production
+DOCENT_ROOM_RESET_ENABLED=false
+```
+
+Add Space secret `DOCENT_API_KEY=<provider credential>`. It must never appear in Pages, GitHub variables, frontend configuration, or repository files.
+
+## Public configuration
+
+`config.json` may contain only API base URL, repository URL, display name, and deployment mode. A browser-generated session ID is not a credential. The frontend stores only a public API URL in localStorage.
+
+## Readiness and limitations
+
+`GET /health` reports safe status, provider mode, record count, and Docent name. It does not reveal environment values or credentials. Room/session state disappears on sleep or restart; the epoch protocol enables resynchronization but does not recover lost messages. No deployed Space or Pages validation is claimed until live endpoints are observed.

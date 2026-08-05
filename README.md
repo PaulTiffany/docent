@@ -1,102 +1,82 @@
 # Docent
 
-A bounded, source-grounded conversational guide for papers, archives, exhibitions, proceedings, projects, and other authored collections.
+Docent is a bounded, source-grounded conversational guide. This repository's default example is a self-docent: it explains its own implementation, limitations, deployment, and authored development frontier from validated public records.
 
-Docent is deliberately smaller than a general-purpose agent. It retrieves a small set of typed authoritative records, constructs a constrained turn prompt, produces one validated answer, and preserves source and author boundaries.
+## See something alive
 
-## Status
-
-This repository is an initial, runnable reference implementation. It includes:
-
-- typed JSONL source records;
-- deterministic local retrieval with no vector database required;
-- an OpenAI-compatible model adapter and a no-key mock adapter;
-- bounded session history;
-- source labels in every answer;
-- a small FastAPI service and browser UI;
-- corpus validation, tests, Docker packaging, and security notes.
-
-It contains **no subject-specific material from prior docent deployments**.
-
-## Quick start
+No model key is required.
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate
-pip install -e '.[dev]'
-cp .env.example .env
-make run
+# Windows: .venv\Scripts\activate
+# macOS/Linux: source .venv/bin/activate
+pip install -e ".[dev]"
+docent-serve
 ```
 
-Open <http://localhost:7860>.
+Open <http://localhost:7860> and ask **“What can this project do now?”** The default `mock` provider deterministically returns the best matching public record. See the short [demo checklist](docs/demo.md).
 
-The default `DOCENT_PROVIDER=mock` works without an API key. To use an OpenAI-compatible endpoint:
+The expected Pages URL after merge and successful deployment is <https://paultiffany.github.io/docent/>. It is not claimed live until observed.
+
+## Ask it about itself
+
+Useful questions include:
+
+- What is a docent?
+- How is this different from unrestricted chat with a PDF?
+- What remains incomplete?
+- Why was the public demo selected?
+- What would a mediated runtime unlock?
+- Which roadmap did the AI prove is optimal?
+
+`POST /api/chat` remains the working bounded single-user path. The `/api/room` transport is partial: it stores messages and queues turns but has no connected agent runtime and must not be described as a working agent room.
+
+## Inspect the project frontier
+
+The `development/` manifests make capabilities, pathways, a human decision, and an active experiment part of the artifact. `GET /api/development/frontier` deterministically derives admissible and blocked pathways from declared preconditions.
+
+“Bellman-style pressures” are a design metaphor: authors record immediate usefulness, cost, risk, information gain, reversibility, lock-in, and future option value with a bounded qualitative vocabulary. Docent computes no aggregate score, claims no mathematical optimum, and never selects a pathway automatically.
+
+Validate the model with:
 
 ```bash
-DOCENT_PROVIDER=openai_compatible \
-DOCENT_MODEL=gpt-4.1-mini \
-DOCENT_API_KEY='...' \
-DOCENT_BASE_URL='https://api.openai.com/v1' \
-uvicorn docent.app:app --host 0.0.0.0 --port 7860
+docent-development-validate
 ```
 
-## Corpus
+## Build another docent
 
-Edit `corpus/records.jsonl`. Each line is one complete epistemic record rather than an arbitrary text chunk. Validate it with:
+Author complete `DocentRecord` objects in JSONL, adjust `config/docent.yaml`, and validate:
 
 ```bash
-make validate
+docent-validate
 ```
 
-See [Corpus authoring](docs/CORPUS_AUTHORING.md).
+The default corpus is `corpus/self-docent.jsonl`. Development records are generated from authoritative manifests rather than duplicated into prose. See [corpus authoring](docs/CORPUS_AUTHORING.md).
 
-## Design
+## Run and deploy
 
-```text
-human message
-  + bounded recent history
-  + typed-record retrieval
-  + docent contract
-        |
-        v
-  one model call
-        |
-        v
-  validated response envelope
-        |
-        v
-  public answer + source labels
-```
+- Local: `docent-serve`
+- Docker: `docker build -t docent . && docker run --rm -p 7860:7860 docent`
+- GitHub Pages: static client built from `web/`
+- Hugging Face: Docker Space on port 7860, deterministic mock by default
 
-The gateway owns retrieval, prompt construction, rate limits, history bounds, and output validation. The model does not choose its own corpus or silently expand its jurisdiction.
+Provider credentials stay server-side. Pages receives only a public API URL. See [deployment](docs/deployment.md).
 
-## Shared room
-
-The optional shared-room core records bounded public messages and queues generic turn requests without invoking a model. See [Room protocol](docs/room-protocol.md) and [Architecture](docs/architecture.md). Runtime workers and persistent stores are intentionally deferred.
-
-## API
+## Public API
 
 - `GET /health`
-- `POST /api/chat`
-- `POST /api/search`
 - `GET /api/config/public`
-- `GET /api/room/messages`
-- `POST /api/room/messages`
-- `GET /api/room/status`
-- `POST /api/room/reset`
+- `POST /api/search`
+- `POST /api/chat`
+- read-only `/api/development/*`
+- partial `/api/room/*`
 
-Example:
+Public retrieval excludes `restricted` and `refuse-extraction` records in gateway code before prompt or response construction.
 
-```bash
-curl -s http://localhost:7860/api/chat \
-  -H 'content-type: application/json' \
-  -d '{"session_id":"demo","message":"What can this docent answer?"}' | jq
-```
+## Scope boundary
 
-## OmegaClaw acknowledgment
+This repository contains no deleted subject-specific atlas, prior hosted-space identity, private token, conference-specific or paper-specific corpus, OmegaClaw adapter, external runtime, WebSocket agent channel, durable database, or production multi-user agent room.
 
-The bounded public-agent pattern explored here was informed by experiments using [OmegaClaw-Core](https://github.com/asi-alliance/OmegaClaw-Core), a neural-symbolic agent framework created by Dr. Patrick Hammer and developed by the SingularityNET Foundation / ASI Alliance community. This repository is an independent implementation and does not bundle OmegaClaw code. See [ACKNOWLEDGMENTS.md](ACKNOWLEDGMENTS.md) and [docs/OMEGACLAW.md](docs/OMEGACLAW.md).
+Development was informed by public-agent experiments using OmegaClaw. OmegaClaw is credited in [ACKNOWLEDGMENTS.md](ACKNOWLEDGMENTS.md) but is not bundled or running here.
 
-## License
-
-MIT. See [LICENSE](LICENSE).
+MIT licensed. See [LICENSE](LICENSE).

@@ -16,17 +16,17 @@ unresolved_uncertainties: [How visitors use the frontier, Whether public feedbac
 reversibility: High; the demo and manifests can be revised without committing to a runtime topology.
 lock_in_implications: Low architectural lock-in; it preserves both mediated and external runtime options.
 completion_evidence:
-  - {evidence_id: development-validation, evidence_type: repository, description: Development manifests validate, status: pending}
-  - {evidence_id: public-retrieval-tests, evidence_type: repository, description: Public-only retrieval tests pass, status: pending}
-  - {evidence_id: self-corpus-validation, evidence_type: repository, description: Default self-docent corpus validates, status: pending}
-  - {evidence_id: local-mock-chat, evidence_type: repository, description: Local mock chat works end to end, status: pending}
-  - {evidence_id: frontend-reproducible, evidence_type: repository, description: Canonical frontend build is reproducible, status: pending}
-  - {evidence_id: pages-workflow, evidence_type: repository, description: Pages workflow exists and validates, status: pending}
+  - {evidence_id: development-validation, evidence_type: repository, description: Development manifests validate, status: satisfied, reference: tests/test_development.py}
+  - {evidence_id: public-retrieval-tests, evidence_type: repository, description: Public-only retrieval tests pass, status: satisfied, reference: tests/test_public_boundary.py}
+  - {evidence_id: self-corpus-validation, evidence_type: repository, description: Default self-docent corpus validates, status: satisfied, reference: tests/test_self_docent.py}
+  - {evidence_id: local-mock-chat, evidence_type: repository, description: Local mock chat works end to end, status: satisfied, reference: tests/test_self_docent.py}
+  - {evidence_id: frontend-reproducible, evidence_type: repository, description: Canonical frontend build is reproducible, status: satisfied, reference: tests/test_frontend.py}
+  - {evidence_id: pages-workflow, evidence_type: repository, description: Pages workflow exists and validates, status: satisfied, reference: .github/workflows/pages.yml}
   - {evidence_id: docker-ci, evidence_type: repository, description: Docker image builds in CI, status: pending}
-  - {evidence_id: hf-workflow, evidence_type: repository, description: Hugging Face workflow exists and validates, status: pending}
-  - {evidence_id: frontend-secret-audit, evidence_type: repository, description: Frontend assets contain no secret, status: pending}
+  - {evidence_id: hf-workflow, evidence_type: repository, description: Hugging Face workflow exists and validates, status: satisfied, reference: .github/workflows/huggingface-space.yml}
+  - {evidence_id: frontend-secret-audit, evidence_type: repository, description: Frontend assets contain no secret, status: satisfied, reference: tests/test_frontend.py}
   - {evidence_id: container-health, evidence_type: repository, description: Health works in the built container, status: pending}
-  - {evidence_id: deployment-docs, evidence_type: repository, description: Deployment documentation exists, status: pending}
+  - {evidence_id: deployment-docs, evidence_type: repository, description: Deployment documentation exists, status: satisfied, reference: docs/deployment.md}
   - {evidence_id: pages-live, evidence_type: live, description: Public Pages URL is observed, status: pending}
   - {evidence_id: space-health-live, evidence_type: live, description: Public Hugging Face health endpoint is observed, status: pending}
   - {evidence_id: browser-space-chat-live, evidence_type: live, description: One browser-to-Space chat is observed, status: pending}

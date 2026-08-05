@@ -24,5 +24,8 @@ safety_boundaries:
   - No secret in browser assets.
   - Public records only enter retrieval.
 observations:
-  - Repository implementation has begun; no public deployment has been observed.
+  - Repository validation passed for manifests, public retrieval, self-corpus, mock chat, frontend generation, packaging, and deployment assets.
+  - An installed wheel served a healthy mock application outside the checkout.
+  - The local Docker CLI was present but its Linux engine was unavailable, so container health remains pending CI.
+  - No public Pages deployment, Space health endpoint, or browser-to-Space chat has been observed.
 result_status: active
