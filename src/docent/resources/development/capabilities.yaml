@@ -102,11 +102,11 @@ capabilities:
   - capability_id: docker-packaging
     title: Docker packaging
     description: A Docker image definition and Compose configuration run the ASGI gateway on port 7860.
-    status: partial
+    status: implemented
     evidence_basis: [Dockerfile and Compose configuration]
     implementation_references: [Dockerfile, compose.yaml]
     validation_references: [.github/workflows/ci.yml]
-    limitations: [The image now runs as an unprivileged user; local Docker validation remains environment-dependent.]
+    limitations: [The image is CI-validated as an unprivileged process; local Docker Desktop was unavailable during this enactment.]
     dependencies: [health-endpoint]
     public: true
     last_reviewed: "0.2.0"

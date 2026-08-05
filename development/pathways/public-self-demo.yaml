@@ -22,10 +22,10 @@ completion_evidence:
   - {evidence_id: local-mock-chat, evidence_type: repository, description: Local mock chat works end to end, status: satisfied, reference: tests/test_self_docent.py}
   - {evidence_id: frontend-reproducible, evidence_type: repository, description: Canonical frontend build is reproducible, status: satisfied, reference: tests/test_frontend.py}
   - {evidence_id: pages-workflow, evidence_type: repository, description: Pages workflow exists and validates, status: satisfied, reference: .github/workflows/pages.yml}
-  - {evidence_id: docker-ci, evidence_type: repository, description: Docker image builds in CI, status: pending}
+  - {evidence_id: docker-ci, evidence_type: repository, description: Docker image builds in CI, status: satisfied, reference: .github/workflows/ci.yml}
   - {evidence_id: hf-workflow, evidence_type: repository, description: Hugging Face workflow exists and validates, status: satisfied, reference: .github/workflows/huggingface-space.yml}
   - {evidence_id: frontend-secret-audit, evidence_type: repository, description: Frontend assets contain no secret, status: satisfied, reference: tests/test_frontend.py}
-  - {evidence_id: container-health, evidence_type: repository, description: Health works in the built container, status: pending}
+  - {evidence_id: container-health, evidence_type: repository, description: Health works in the built container, status: satisfied, reference: .github/workflows/ci.yml}
   - {evidence_id: deployment-docs, evidence_type: repository, description: Deployment documentation exists, status: satisfied, reference: docs/deployment.md}
   - {evidence_id: pages-live, evidence_type: live, description: Public Pages URL is observed, status: pending}
   - {evidence_id: space-health-live, evidence_type: live, description: Public Hugging Face health endpoint is observed, status: pending}
