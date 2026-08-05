@@ -22,7 +22,7 @@ completion_evidence:
   - {evidence_id: error-budget-tests, evidence_type: repository, description: Error mapping and budget tests pass, status: satisfied}
   - {evidence_id: frontend-mode-tests, evidence_type: repository, description: Frontend mode and secret-boundary tests pass, status: satisfied}
   - {evidence_id: documentation, evidence_type: repository, description: Deployment and security documentation exists, status: satisfied}
-  - {evidence_id: branch-ci, evidence_type: repository, description: Branch CI is green, status: pending}
+  - {evidence_id: branch-ci, evidence_type: repository, description: Branch CI is green, status: satisfied}
   - {evidence_id: space-live-config, evidence_type: live, description: Hugging Face reports live inference enabled, status: pending}
   - {evidence_id: pages-live-config, evidence_type: live, description: Pages retrieves the live configuration, status: pending}
   - {evidence_id: browser-live-answer, evidence_type: live, description: Browser-to-Space synthesis succeeds with actual model and supporting records, status: pending}
