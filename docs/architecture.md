@@ -52,3 +52,15 @@ External transports, OmegaClaw adapters, durable persistence, WebSockets, and tr
 Session, room, queue, and idempotency state are in-process and ephemeral. Reset creates a new epoch; process restart loses state. Packaged defaults under `docent.resources` allow an installed wheel to resolve the contract, self-corpus, development manifests, and static assets outside the repository root. Environment path overrides remain supported.
 
 No subject-specific atlas is included.
+
+## Inference modes and provider boundary
+
+`ChatRequest.mode` is optional. A mock-only deployment defaults to `deterministic`; a configured `openai_compatible` deployment defaults to `live`. The browser can request only `live` or `deterministic`, never a URL, key, header, model, or provider object. Deterministic mode can be disabled by configuration.
+
+The gateway retrieves public records, constructs a bounded prompt, reserves a live attempt, receives `ProviderCompletion`, validates `DocentEnvelope`, removes unsupported and duplicate record IDs, corrects grounding, and attaches `ProviderProvenance`. Provider errors never append history and never invoke `MockProvider` silently.
+
+OpenRouter is the reference gateway because it accepts the existing OpenAI-compatible request shape and lets an operator select an opaque model route through `DOCENT_MODEL`. `HTTP-Referer` and `X-OpenRouter-Title` are optional attribution headers populated only from safe operator settings. The generic provider remains usable with other compatible base URLs.
+
+### Demo safeguards
+
+`InMemoryDailyBudget` reserves one unit immediately before each live upstream attempt. Failed upstream attempts count; deterministic requests and requests rejected before the call do not. Its lock protects only day rollover and reservation, never network inference. The counter resets at the UTC day boundary and process restart and is not durable or cross-replica correct. It is a demonstration safeguard, not billing infrastructure; the provider remains the outer limit.

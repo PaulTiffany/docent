@@ -31,3 +31,9 @@ The primary risks are prompt injection inside source material, accidental disclo
 ## Reporting
 
 Please open a private security advisory in the eventual GitHub repository rather than posting an exploitable issue publicly.
+
+## Live inference secret and failure boundary
+
+`DOCENT_API_KEY` is read only by the server-side provider factory. It is forbidden from Pages assets, generated public config, workflow artifacts, staged Space content, logs, API payloads, error messages, and browser storage. GitHub's `HF_TOKEN` only synchronizes repository content to the Space and must never be reused as a model credential.
+
+Provider failures are reduced to stable public codes and bounded retry seconds. Raw upstream bodies, headers, account facts, stack traces, and reasoning details are not public. Live failure never produces a deterministic answer unless the visitor separately requests deterministic corpus mode.

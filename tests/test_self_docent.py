@@ -22,6 +22,9 @@ def test_default_self_docent_corpus_is_public_and_retrievable() -> None:
         "How does Docent work?": "docent.architecture",
         "How is this different from chat with a PDF?": "docent.jurisdiction",
         "Does Docent use OmegaClaw?": "docent.omegaclaw",
+        "What does openrouter/free mean?": "docent.openrouter-gateway",
+        "Why is deterministic fallback explicit?": "docent.inference-modes",
+        "How is the live budget counted?": "docent.live-budget",
     }
     for question, expected_id in cases.items():
         assert retriever.search(question, limit=1)[0].record.record_id == expected_id

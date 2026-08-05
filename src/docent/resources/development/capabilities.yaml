@@ -220,3 +220,81 @@ capabilities:
     dependencies: [mediated-room-runtime, durable-persistence]
     public: true
     last_reviewed: "0.2.0"
+
+  - capability_id: model-backed-public-chat
+    title: Model-backed public chat
+    description: The public chat can synthesize across bounded evidence through a configured live provider.
+    status: experimental
+    evidence_basis: [Repository implementation and tests; public live deployment unobserved]
+    implementation_references: [src/docent/service.py, src/docent/app.py]
+    validation_references: [tests/test_live_inference.py]
+    limitations: [No live OpenRouter browser response has been observed.]
+    dependencies: [openai-compatible-provider, validated-response-envelopes]
+    public: true
+    last_reviewed: "0.3.0-dev"
+  - capability_id: configurable-model-selection
+    title: Configurable model selection
+    description: An operator changes the opaque provider model or route through DOCENT_MODEL without changing provider code.
+    status: implemented
+    evidence_basis: [Settings and OpenAICompatibleProvider]
+    implementation_references: [src/docent/config.py, src/docent/providers/openai_compatible.py]
+    validation_references: [tests/test_live_inference.py]
+    limitations: [Model compatibility and availability are external facts.]
+    dependencies: [openai-compatible-provider]
+    public: true
+    last_reviewed: "0.3.0-dev"
+  - capability_id: free-tier-inference
+    title: Free-tier inference reference deployment
+    description: The documented deployment can use an operator-selected free OpenRouter route through the generic provider.
+    status: experimental
+    evidence_basis: [Portable configuration and deployment documentation; live evidence pending]
+    implementation_references: [docs/deployment.md, .env.example]
+    validation_references: [tests/test_live_inference.py]
+    limitations: [Free-tier availability and limits can change outside this repository.]
+    dependencies: [configurable-model-selection]
+    public: true
+    last_reviewed: "0.3.0-dev"
+  - capability_id: explicit-deterministic-mode
+    title: Explicit deterministic corpus mode
+    description: Visitors can explicitly request corpus playback without model inference; live failures never select it silently.
+    status: implemented
+    evidence_basis: [InferenceMode and DocentService]
+    implementation_references: [src/docent/models.py, src/docent/service.py, web/app.js]
+    validation_references: [tests/test_live_inference.py, tests/test_frontend.py]
+    limitations: [It returns a retrieved record rather than synthesis.]
+    dependencies: [mock-provider]
+    public: true
+    last_reviewed: "0.3.0-dev"
+  - capability_id: provider-provenance
+    title: Gateway-owned provider provenance
+    description: Responses identify inference mode, configured route, actual model when reported, safe usage, and grounding independently of model prose.
+    status: implemented
+    evidence_basis: [ProviderCompletion and ProviderProvenance]
+    implementation_references: [src/docent/models.py, src/docent/service.py]
+    validation_references: [tests/test_live_inference.py]
+    limitations: [Actual model and usage can be absent when an upstream does not report them.]
+    dependencies: [validated-response-envelopes]
+    public: true
+    last_reviewed: "0.3.0-dev"
+  - capability_id: quota-aware-failures
+    title: Quota-aware provider failures
+    description: Typed internal failures become stable bounded public codes without raw upstream bodies.
+    status: implemented
+    evidence_basis: [Provider error hierarchy and gateway mapping]
+    implementation_references: [src/docent/providers/errors.py, src/docent/app.py]
+    validation_references: [tests/test_live_inference.py]
+    limitations: [Provider-specific error taxonomies can vary.]
+    dependencies: [openai-compatible-provider]
+    public: true
+    last_reviewed: "0.3.0-dev"
+  - capability_id: application-inference-budget
+    title: Application-level inference budget
+    description: A locked process-local UTC-day counter reserves one unit before each live upstream attempt.
+    status: implemented
+    evidence_basis: [InMemoryDailyBudget and concurrency tests]
+    implementation_references: [src/docent/live_budget.py, src/docent/service.py]
+    validation_references: [tests/test_live_inference.py]
+    limitations: [The counter resets on restart and is neither durable nor cross-replica correct.]
+    dependencies: [model-backed-public-chat]
+    public: true
+    last_reviewed: "0.3.0-dev"
