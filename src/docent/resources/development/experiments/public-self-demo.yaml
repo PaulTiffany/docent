@@ -27,5 +27,8 @@ observations:
   - Repository validation passed for manifests, public retrieval, self-corpus, mock chat, frontend generation, packaging, and deployment assets.
   - An installed wheel served a healthy mock application outside the checkout.
   - The local Docker CLI was present but its Linux engine was unavailable; GitHub CI subsequently built the non-root image and observed a healthy container.
-  - No public Pages deployment, Space health endpoint, or browser-to-Space chat has been observed.
+  - GitHub Pages served the canonical client at https://paultiffany.github.io/docent/ on 2026-08-05.
+  - The public Hugging Face Space reported provider=mock and a healthy 48-record corpus at https://paultiffany-docent.hf.space/health on 2026-08-05.
+  - A Pages-origin cross-origin chat reached the Space and returned grounded authored evidence that explicitly preserved human roadmap selection on 2026-08-05.
+  - The experiment remains active because useful human design feedback has not yet been collected; live operation alone does not establish the hypothesis.
 result_status: active
