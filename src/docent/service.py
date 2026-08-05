@@ -8,14 +8,24 @@ from pydantic import ValidationError
 
 from docent.config import DocentContract, Settings
 from docent.history import SessionHistory
+from docent.live_budget import InMemoryDailyBudget
 from docent.models import (
     ChatMessage,
     ChatResponse,
     DocentEnvelope,
+    InferenceMode,
+    ProviderCompletion,
+    ProviderProvenance,
     SearchHit,
 )
 from docent.prompting import build_system_prompt, build_user_prompt
 from docent.providers.base import ModelProvider
+from docent.providers.errors import (
+    InferenceModeDisabledError,
+    LiveBudgetExhaustedError,
+    ModelEnvelopeError,
+)
+from docent.providers.mock import MockProvider
 from docent.retrieval import LexicalRetriever
 
 logger = logging.getLogger(__name__)
@@ -30,12 +40,16 @@ class DocentService:
         retriever: LexicalRetriever,
         provider: ModelProvider,
         history: SessionHistory,
+        deterministic_provider: ModelProvider | None = None,
+        live_budget: InMemoryDailyBudget | None = None,
     ) -> None:
         self.settings = settings
         self.contract = contract
         self.retriever = retriever
         self.provider = provider
+        self.deterministic_provider = deterministic_provider or MockProvider()
         self.history = history
+        self.live_budget = live_budget or InMemoryDailyBudget(settings.live_daily_budget)
         self.system_prompt = build_system_prompt(contract)
 
     def search(self, query: str, limit: int | None = None) -> list[SearchHit]:
@@ -55,7 +69,18 @@ class DocentService:
             for item in retrieved
         ]
 
-    async def answer(self, session_id: str, message: str) -> ChatResponse:
+    def resolve_mode(self, requested: InferenceMode | None) -> InferenceMode:
+        mode = requested or InferenceMode(self.settings.default_inference_mode)
+        if mode is InferenceMode.live and not self.settings.live_inference_enabled:
+            raise InferenceModeDisabledError("live inference is not configured")
+        if mode is InferenceMode.deterministic and not self.settings.allow_deterministic_mode:
+            raise InferenceModeDisabledError("deterministic inference is disabled")
+        return mode
+
+    async def answer(
+        self, session_id: str, message: str, mode: InferenceMode | None = None
+    ) -> ChatResponse:
+        selected_mode = self.resolve_mode(mode)
         history = await self.history.get(session_id)
         retrieved = self.retriever.search(
             message,
@@ -63,11 +88,19 @@ class DocentService:
             minimum_score=self.settings.min_retrieval_score,
         )
         user_prompt = build_user_prompt(message, history, retrieved)
-        raw = await self.provider.complete(
+
+        selected_provider = self.provider
+        if selected_mode is InferenceMode.deterministic:
+            selected_provider = self.deterministic_provider
+        else:
+            if not await self.live_budget.reserve():
+                raise LiveBudgetExhaustedError("daily live inference budget exhausted")
+
+        completion = await selected_provider.complete(
             system_prompt=self.system_prompt, user_prompt=user_prompt
         )
         envelope = self._parse_envelope(
-            raw, allowed_record_ids={r.record.record_id for r in retrieved}
+            completion, allowed_record_ids={r.record.record_id for r in retrieved}
         )
 
         await self.history.append(session_id, ChatMessage(role="human", content=message))
@@ -83,23 +116,36 @@ class DocentService:
             )
             for item in retrieved
         ]
-        return ChatResponse(session_id=session_id, retrieval=retrieval, **envelope.model_dump())
+        provenance = ProviderProvenance(
+            inference_mode=selected_mode,
+            provider=selected_provider.provider_label,
+            configured_model=completion.configured_model,
+            actual_model=completion.actual_model,
+            provider_request_id=completion.provider_request_id,
+            finish_reason=completion.finish_reason,
+            usage=completion.usage,
+            response_format_mode=completion.response_format_mode,
+            duration_ms=completion.duration_ms,
+        )
+        return ChatResponse(
+            session_id=session_id,
+            retrieval=retrieval,
+            provenance=provenance,
+            **envelope.model_dump(),
+        )
 
-    def _parse_envelope(self, raw: str, allowed_record_ids: set[str]) -> DocentEnvelope:
-        candidate = raw.strip()
+    def _parse_envelope(
+        self, completion: ProviderCompletion, allowed_record_ids: set[str]
+    ) -> DocentEnvelope:
+        candidate = completion.raw_content.strip()
         if candidate.startswith("```"):
             candidate = re.sub(r"^```(?:json)?\s*|\s*```$", "", candidate, flags=re.IGNORECASE)
         try:
             payload = json.loads(candidate)
             envelope = DocentEnvelope.model_validate(payload)
         except (json.JSONDecodeError, ValidationError) as exc:
-            logger.warning("Invalid provider envelope: %s", exc)
-            return DocentEnvelope(
-                reply=self.contract.refusal.unsupported,
-                record_ids=[],
-                grounded=False,
-                limitations=["The model provider returned an invalid response envelope."],
-            )
+            logger.warning("Invalid provider envelope")
+            raise ModelEnvelopeError("invalid model envelope") from exc
 
         invalid_ids = [
             record_id for record_id in envelope.record_ids if record_id not in allowed_record_ids
@@ -110,7 +156,7 @@ class DocentService:
             )
         )
         if invalid_ids:
-            logger.warning("Provider invented or used unavailable record IDs: %s", invalid_ids)
+            logger.warning("Provider used unavailable record IDs")
             envelope.limitations.append("One or more unsupported source identifiers were removed.")
         envelope.record_ids = valid_ids
         if not envelope.record_ids:

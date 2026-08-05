@@ -20,5 +20,7 @@ def build_provider(settings: Settings) -> ModelProvider:
             max_output_tokens=settings.max_output_tokens,
             temperature=settings.temperature,
             timeout_seconds=settings.request_timeout_seconds,
+            site_url=settings.site_url,
+            app_title=settings.app_title,
         )
     raise RuntimeError(f"Unsupported DOCENT_PROVIDER: {settings.provider}")

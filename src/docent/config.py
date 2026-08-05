@@ -16,9 +16,11 @@ class Settings(BaseSettings):
 
     name: str = "Docent"
     description: str = "A bounded guide to Docent and its public development frontier."
-    provider: str = "mock"
-    model: str = "gpt-4.1-mini"
+    provider: str = Field(default="mock", min_length=1, max_length=64)
+    model: str = Field(default="gpt-4.1-mini", min_length=1, max_length=256)
     api_key: str | None = None
+    site_url: str | None = Field(default=None, max_length=2048)
+    app_title: str | None = Field(default=None, min_length=1, max_length=128)
     base_url: str = "https://api.openai.com/v1"
     corpus_path: Path = Field(default_factory=lambda: default_resource("corpus/self-docent.jsonl"))
     contract_path: Path = Field(default_factory=lambda: default_resource("config/docent.yaml"))
@@ -30,6 +32,8 @@ class Settings(BaseSettings):
     temperature: float = Field(default=0.2, ge=0, le=2)
     request_timeout_seconds: float = Field(default=45, gt=0, le=300)
     rate_limit_per_hour: int = Field(default=120, ge=1, le=100000)
+    live_daily_budget: int = Field(default=0, ge=0, le=100000)
+    allow_deterministic_mode: bool = True
     allowed_origins: str = "http://localhost:7860"
     log_level: str = "INFO"
     environment: str = "development"
@@ -37,6 +41,14 @@ class Settings(BaseSettings):
     room_context_limit: int = Field(default=12, ge=0, le=100)
     room_queue_limit: int = Field(default=20, ge=1, le=1000)
     room_reset_enabled: bool = True
+
+    @property
+    def live_inference_enabled(self) -> bool:
+        return self.provider.casefold() == "openai_compatible" and bool(self.api_key)
+
+    @property
+    def default_inference_mode(self) -> str:
+        return "live" if self.live_inference_enabled else "deterministic"
 
     @property
     def allow_room_reset(self) -> bool:

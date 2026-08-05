@@ -81,9 +81,47 @@ class ChatMessage(BaseModel):
     content: str
 
 
+class InferenceMode(str, Enum):
+    live = "live"
+    deterministic = "deterministic"
+
+
+class TokenUsage(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    prompt_tokens: int | None = Field(default=None, ge=0, le=100_000_000)
+    completion_tokens: int | None = Field(default=None, ge=0, le=100_000_000)
+    total_tokens: int | None = Field(default=None, ge=0, le=100_000_000)
+
+
+class ProviderCompletion(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    raw_content: str = Field(min_length=1, max_length=100_000)
+    configured_model: str = Field(min_length=1, max_length=256)
+    actual_model: str | None = Field(default=None, min_length=1, max_length=256)
+    provider_request_id: str | None = Field(default=None, min_length=1, max_length=256)
+    finish_reason: str | None = Field(default=None, min_length=1, max_length=128)
+    usage: TokenUsage | None = None
+    response_format_mode: Literal["json_object", "text", "deterministic"]
+    duration_ms: int = Field(ge=0, le=3_600_000)
+
+
+class ProviderProvenance(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    inference_mode: InferenceMode
+    provider: str = Field(min_length=1, max_length=64)
+    configured_model: str = Field(min_length=1, max_length=256)
+    actual_model: str | None = Field(default=None, min_length=1, max_length=256)
+    provider_request_id: str | None = Field(default=None, min_length=1, max_length=256)
+    finish_reason: str | None = Field(default=None, min_length=1, max_length=128)
+    usage: TokenUsage | None = None
+    response_format_mode: Literal["json_object", "text", "deterministic"]
+    duration_ms: int = Field(ge=0, le=3_600_000)
+
+
 class ChatRequest(BaseModel):
     session_id: str = Field(min_length=1, max_length=128)
     message: str = Field(min_length=1, max_length=12000)
+    mode: InferenceMode | None = None
 
 
 class SearchRequest(BaseModel):
@@ -115,6 +153,23 @@ class DocentEnvelope(BaseModel):
 class ChatResponse(DocentEnvelope):
     session_id: str
     retrieval: list[SearchHit] = Field(default_factory=list)
+    provenance: ProviderProvenance
+
+
+class PublicConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    name: str
+    role: str
+    description: str
+    default_inference_mode: InferenceMode
+    live_inference_enabled: bool
+    deterministic_mode_enabled: bool
+    enabled_inference_modes: list[InferenceMode]
+    provider: str
+    configured_model: str
+    app_title: str | None = None
+    live_daily_budget_enabled: bool
+    live_daily_budget_remaining: int | None = Field(default=None, ge=0)
 
 
 class AgentConnectionState(str, Enum):
