@@ -35,3 +35,7 @@ dialog { width:min(520px,calc(100% - 2rem)); border:1px solid var(--line); borde
 footer { display:flex; justify-content:space-between; width:min(1180px,calc(100% - 2.5rem)); margin:2rem auto 0; padding:2rem 0; border-top:1px solid var(--line); color:var(--muted); font-size:.85rem; }footer a { color:var(--green); }
 .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
 @media (max-width:760px) { .site-header { align-items:flex-start; flex-direction:column; gap:.8rem; }.site-header nav { width:100%; overflow:auto; }.intro-grid,.state-grid,.deploy-grid,.secret-map dl { grid-template-columns:1fr; }.connection-card { margin-top:1rem; }.message { max-width:94%; }h1 { font-size:clamp(2.5rem,14vw,4.2rem); }.composer-actions { align-items:stretch; flex-direction:column-reverse; }.composer-actions button { width:100%; } }
+
+.mode-controls { display:flex; align-items:center; gap:.7rem; flex-wrap:wrap; padding:.25rem .5rem; color:var(--muted); font-size:.82rem; }
+.message.error { border-left:4px solid var(--red); background:#fff0ed; }
+.provenance { margin-top:.55rem; font-family:"DM Mono",monospace; font-size:.72rem; }

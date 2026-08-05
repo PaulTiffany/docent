@@ -22,7 +22,7 @@
   <main>
     <section id="chat-view" class="view active" aria-labelledby="chat-title">
       <div class="intro-grid">
-        <div><p class="eyebrow">A living reference implementation</p><h1 id="chat-title">Ask Docent about Docent.</h1><p class="lede">Answers stay inside a validated public evidence collection. The deterministic mock works without a model key.</p></div>
+        <div><p class="eyebrow">A living reference implementation</p><h1 id="chat-title">Ask Docent about Docent.</h1><p class="lede">Answers stay inside a validated public evidence collection. Live inference synthesizes from bounded evidence when configured. Deterministic corpus mode remains explicit and available without a model key.</p></div>
         <aside class="connection-card" aria-live="polite"><span id="connection-dot" class="dot"></span><div><strong id="connection-label">Connecting</strong><small id="provider-label">Checking public API…</small></div><button id="configure-api" class="text-button">API settings</button></aside>
       </div>
       <div id="setup-panel" class="notice hidden"><strong>Connect this Pages client to a public Docent API.</strong><p>The repository deployment variable is not configured. Enter a public API URL below; only that URL is stored locally.</p></div>
@@ -31,7 +31,7 @@
       <form id="chat-form" class="composer">
         <label class="sr-only" for="chat-input">Ask Docent</label>
         <textarea id="chat-input" maxlength="12000" rows="2" placeholder="Ask about capabilities, evidence, or next pathways…" required></textarea>
-        <div class="composer-actions"><button id="reset-chat" type="button" class="secondary">Reset local conversation</button><button id="send-chat" type="submit" class="primary">Ask Docent <span aria-hidden="true">→</span></button></div>
+        <div class="mode-controls"><span id="mode-label">Loading inference mode…</span><button id="toggle-mode" type="button" class="text-button hidden"></button><button id="deterministic-fallback" type="button" class="secondary hidden">Use deterministic corpus mode</button></div><div class="composer-actions"><button id="reset-chat" type="button" class="secondary">Reset local conversation</button><button id="send-chat" type="submit" class="primary">Ask Docent <span aria-hidden="true">→</span></button></div>
       </form>
     </section>
     <section id="state-view" class="view" aria-labelledby="state-title">
@@ -46,10 +46,10 @@
       <div class="deploy-grid">
         <article class="panel"><span class="step">01</span><h2>Run locally</h2><pre><code>python -m venv .venv
 pip install -e ".[dev]"
-docent-serve</code></pre><p>Open <code>http://localhost:7860</code>. Mock mode is the default.</p></article>
+docent-serve</code></pre><p>Open <code>http://localhost:7860</code>. Deterministic corpus mode is the offline default. Configure an OpenAI-compatible provider for live inference.</p></article>
         <article class="panel"><span class="step">02</span><h2>Run with Docker</h2><pre><code>docker build -t docent .
 docker run --rm -p 7860:7860 docent</code></pre><p>The unprivileged container exposes <code>/health</code> on port 7860.</p></article>
-        <article class="panel"><span class="step">03</span><h2>Pages + Space</h2><p>GitHub Pages serves this static client. A Hugging Face Docker Space serves the API in mock or model-backed mode. Set the Pages public API URL to the Space URL.</p></article>
+        <article class="panel"><span class="step">03</span><h2>Pages + Space</h2><p>GitHub Pages serves this static client. A Hugging Face Docker Space serves the API. The reference deployment uses OpenRouter through the generic OpenAI-compatible provider; the browser never calls OpenRouter directly. Set the Pages public API URL to the Space URL.</p></article>
         <article class="panel"><span class="step">04</span><h2>Author another docent</h2><p>Replace the typed public corpus and behavior contract, validate both, then deploy the same gateway and client. Provider credentials remain server-side.</p></article>
       </div>
       <section class="secret-map panel"><h2>Configuration boundaries</h2><dl><div><dt>Public client</dt><dd>API base URL, repository URL, display name, deployment mode</dd></div><div><dt>GitHub deployment</dt><dd>HF_TOKEN secret; HF_SPACE_ID and optional DOCENT_API_BASE_URL variables</dd></div><div><dt>Hugging Face runtime</dt><dd>DOCENT_API_KEY is a Space secret only; provider settings are Space variables</dd></div></dl></section>
