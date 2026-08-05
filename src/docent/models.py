@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from datetime import date
-from typing import Literal
+from datetime import date, datetime
+from enum import Enum
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator
 
@@ -114,3 +115,90 @@ class DocentEnvelope(BaseModel):
 class ChatResponse(DocentEnvelope):
     session_id: str
     retrieval: list[SearchHit] = Field(default_factory=list)
+
+
+class AgentConnectionState(str, Enum):
+    disconnected = "disconnected"
+    connecting = "connecting"
+    ready = "ready"
+    busy = "busy"
+    degraded = "degraded"
+
+
+class RoomMessage(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    message_id: str = Field(min_length=1, max_length=128)
+    sequence: int = Field(ge=1)
+    room_epoch: str = Field(min_length=1, max_length=128)
+    sender_id: str = Field(min_length=1, max_length=128)
+    sender_role: Literal["human", "agent", "system"]
+    text: str = Field(min_length=1, max_length=12000)
+    timestamp: datetime
+    directed_recipient: str | None = Field(default=None, min_length=1, max_length=128)
+    idempotency_key: str | None = Field(default=None, min_length=1, max_length=128)
+
+
+class RoomState(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    room_epoch: str
+    latest_sequence: int = Field(ge=0)
+    agent_connection_state: AgentConnectionState
+    agent_busy: bool
+    queued_turn_count: int = Field(ge=0)
+
+
+class TurnRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    triggering_message: RoomMessage
+    recent_context: list[RoomMessage]
+    retrieved_records: list[RetrievedRecord]
+    session_id: str = Field(min_length=1, max_length=128)
+    room_metadata: dict[str, str] = Field(default_factory=dict)
+
+
+class TurnResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    response: DocentEnvelope
+    source_record_ids: list[str] = Field(default_factory=list)
+    status: Literal["completed", "refused", "failed"]
+    started_at: datetime
+    completed_at: datetime
+    duration_ms: int = Field(ge=0)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class RoomMessageCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    sender_id: str = Field(min_length=1, max_length=128)
+    text: str = Field(min_length=1, max_length=12000)
+    session_id: str = Field(min_length=1, max_length=128)
+    directed_recipient: str | None = Field(default=None, min_length=1, max_length=128)
+    idempotency_key: str | None = Field(default=None, min_length=1, max_length=128)
+
+
+class RoomMessageCreateResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    message: RoomMessage
+    duplicate: bool
+    queued: bool
+    state: RoomState
+
+
+class RoomMessagesResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    messages: list[RoomMessage]
+    state: RoomState
+
+
+class RoomResetResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    previous_epoch: str
+    state: RoomState

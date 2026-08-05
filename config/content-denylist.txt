@@ -1,0 +1,5 @@
+# Public, non-sensitive markers that must not enter implementation surfaces.
+# Add one case-insensitive literal per line. Documentation and user corpora are
+# intentionally outside the scan roots; this guard protects generic engineering.
+private-atlas
+subject-specific-deployment-token

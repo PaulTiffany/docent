@@ -63,8 +63,12 @@ class DocentService:
             minimum_score=self.settings.min_retrieval_score,
         )
         user_prompt = build_user_prompt(message, history, retrieved)
-        raw = await self.provider.complete(system_prompt=self.system_prompt, user_prompt=user_prompt)
-        envelope = self._parse_envelope(raw, allowed_record_ids={r.record.record_id for r in retrieved})
+        raw = await self.provider.complete(
+            system_prompt=self.system_prompt, user_prompt=user_prompt
+        )
+        envelope = self._parse_envelope(
+            raw, allowed_record_ids={r.record.record_id for r in retrieved}
+        )
 
         await self.history.append(session_id, ChatMessage(role="human", content=message))
         await self.history.append(session_id, ChatMessage(role="docent", content=envelope.reply))
@@ -97,7 +101,9 @@ class DocentService:
                 limitations=["The model provider returned an invalid response envelope."],
             )
 
-        invalid_ids = [record_id for record_id in envelope.record_ids if record_id not in allowed_record_ids]
+        invalid_ids = [
+            record_id for record_id in envelope.record_ids if record_id not in allowed_record_ids
+        ]
         if invalid_ids:
             logger.warning("Provider invented or used unavailable record IDs: %s", invalid_ids)
             envelope.record_ids = [
