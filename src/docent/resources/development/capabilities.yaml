@@ -190,11 +190,11 @@ capabilities:
   - capability_id: public-self-demo
     title: Public self-docent demo
     description: A public visitor can ask Docent about Docent and inspect its authored development frontier.
-    status: partial
-    evidence_basis: [Working local self-docent and canonical public client; live deployment evidence pending]
+    status: implemented
+    evidence_basis: [Working self-docent and canonical public client; Pages, mock Space health, and cross-origin chat observed on 2026-08-05]
     implementation_references: [web/index.html, src/docent/development_records.py, corpus/self-docent.jsonl]
     validation_references: [tests/test_self_docent.py, tests/test_frontend.py]
-    limitations: [No public Pages or Space deployment has been observed.]
+    limitations: [The public deployment uses deterministic mock mode; the feedback hypothesis remains under observation.]
     dependencies: [bounded-single-user-chat, mock-provider]
     public: true
     last_reviewed: "0.2.0"
