@@ -46,6 +46,4 @@ def test_checked_source_lock_matches_parser_contract() -> None:
 
     assert lock["document_id"] == DOCUMENT_ID
     assert lock["section_count"] == len(SECTIONS)
-    assert [row["heading"] for row in lock["sections"]] == [
-        heading for _key, heading in SECTIONS
-    ]
+    assert [row["heading"] for row in lock["sections"]] == [heading for _key, heading in SECTIONS]

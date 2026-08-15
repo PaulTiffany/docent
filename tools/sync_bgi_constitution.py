@@ -15,14 +15,8 @@ ROOT = Path(__file__).resolve().parents[1]
 LOCK_PATH = ROOT / "sources" / "openbgi-constitution.lock.json"
 
 DOCUMENT_ID = "11cTcfq8biFMSppDqG-P-7uIaZMSr7prfsiI5EkVZ0LM"
-CANONICAL_URL = (
-    "https://docs.google.com/document/d/"
-    f"{DOCUMENT_ID}/edit?tab=t.0"
-)
-EXPORT_URL = (
-    "https://docs.google.com/document/d/"
-    f"{DOCUMENT_ID}/export?format=txt"
-)
+CANONICAL_URL = f"https://docs.google.com/document/d/{DOCUMENT_ID}/edit?tab=t.0"
+EXPORT_URL = f"https://docs.google.com/document/d/{DOCUMENT_ID}/export?format=txt"
 EXPECTED_TITLE = "OpenBGI Constitution for Beneficial AGI"
 MAX_SOURCE_BYTES = 1_000_000
 
@@ -225,10 +219,7 @@ def main() -> None:
     if expected != observed:
         print(describe_drift(expected, observed), file=sys.stderr)
         raise SystemExit(1)
-    print(
-        "source verified "
-        f"{observed['version_label']} {observed['normalized_document_sha256']}"
-    )
+    print(f"source verified {observed['version_label']} {observed['normalized_document_sha256']}")
 
 
 if __name__ == "__main__":
