@@ -4,14 +4,7 @@ import json
 from pathlib import Path
 
 from docent.models import DocentRecord
-from docent.openbgi_source import (
-    CANONICAL_URL,
-    DOCUMENT_ID,
-    SECTIONS,
-    SNAPSHOT_FILENAME,
-    build_manifest,
-    compile_workbook,
-)
+from docent.openbgi_source import CANONICAL_URL, DOCUMENT_ID, SECTIONS, compile_sheet
 
 SUBJECT_ID = "openbgi-constitution"
 
@@ -211,33 +204,45 @@ def load_openbgi_records(snapshot_root: Path, lock_path: Path) -> list[DocentRec
     if not lock_path.is_file():
         raise OpenBGISnapshotError(f"OpenBGI source lock does not exist: {lock_path}")
 
-    snapshot_path = snapshot_root / SNAPSHOT_FILENAME
-    if not snapshot_path.is_file():
-        raise OpenBGISnapshotError(f"OpenBGI document snapshot is missing: {SNAPSHOT_FILENAME}")
-
     try:
         lock = json.loads(lock_path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
         raise OpenBGISnapshotError("OpenBGI source lock is not valid JSON") from exc
 
-    source_text = snapshot_path.read_text(encoding="utf-8-sig")
-    manifest = build_manifest(source_text)
-    if lock != manifest:
-        raise OpenBGISnapshotError(
-            "OpenBGI document snapshot does not exactly match its checked source lock"
-        )
-    if manifest.get("version_label") != "Draft 0.6":
+    if lock.get("schema_version") != 2:
+        raise OpenBGISnapshotError("OpenBGI source lock must use schema_version 2")
+    if lock.get("document_id") != DOCUMENT_ID or lock.get("canonical_url") != CANONICAL_URL:
+        raise OpenBGISnapshotError("OpenBGI source lock points at an unexpected document")
+    if lock.get("version_label") != "Draft 0.6":
         raise OpenBGISnapshotError("OpenBGI worked example expects the reviewed Draft 0.6 snapshot")
 
-    workbook = compile_workbook(source_text)
+    locked_sections = lock.get("sections", [])
+    if [row.get("key") for row in locked_sections] != [key for key, _heading in SECTIONS]:
+        raise OpenBGISnapshotError("OpenBGI source lock sheets do not match the compiler")
+    locked_by_key = {row["key"]: row for row in locked_sections}
     metadata = {key: (heading, topics) for key, heading, topics in SECTION_SPECS}
 
     records: list[DocentRecord] = []
-    for sheet in workbook.sheets:
-        heading, topics = metadata[sheet.key]
-        if heading != sheet.heading:
-            raise OpenBGISnapshotError(f"OpenBGI sheet heading mismatch: {sheet.key}")
+    observed_cell_count = 0
+    for key, heading in SECTIONS:
+        source_path = snapshot_root / f"{key}.txt"
+        if not source_path.is_file():
+            raise OpenBGISnapshotError(f"OpenBGI sheet snapshot is missing: {source_path.name}")
+        sheet = compile_sheet(key, heading, source_path.read_text(encoding="utf-8-sig"))
+        row = locked_by_key[key]
+        expected = {
+            "key": sheet.key,
+            "heading": sheet.heading,
+            "sha256": sheet.sha256,
+            "characters": sheet.characters,
+            "cell_count": len(sheet.cells),
+            "cells_sha256": sheet.cells_sha256,
+        }
+        if row != expected:
+            raise OpenBGISnapshotError(f"OpenBGI sheet failed its source lock: {key}")
+        observed_cell_count += len(sheet.cells)
 
+        _heading, topics = metadata[sheet.key]
         records.append(
             _base_record(
                 record_id=f"openbgi.{sheet.key}",
@@ -248,12 +253,12 @@ def load_openbgi_records(snapshot_root: Path, lock_path: Path) -> list[DocentRec
                 topics=topics,
                 question_forms=_question_forms(sheet.key, sheet.heading),
                 boundaries=[
-                    "Exact normalized constitutional sheet compiled deterministically from the checked canonical document snapshot; no model rewrote this text.",
+                    "Exact normalized constitutional sheet compiled deterministically from the checked Google Doc snapshot; no model rewrote this text.",
                     f"Sheet SHA-256: {sheet.sha256}.",
                     f"Sheet contains {len(sheet.cells)} addressable source cells.",
                     "Remote source drift is independently checked against the same source lock.",
                 ],
-                version=workbook.version_label,
+                version=str(lock["version_label"]),
             )
         )
 
@@ -268,12 +273,15 @@ def load_openbgi_records(snapshot_root: Path, lock_path: Path) -> list[DocentRec
                     topics=topics,
                     question_forms=[],
                     boundaries=[
-                        "Exact source cell compiled deterministically from the checked canonical document snapshot; no model rewrote this text.",
+                        "Exact source cell compiled deterministically from the checked Google Doc sheet snapshot; no model rewrote this text.",
                         f"Cell address: {sheet.key}!{cell.address}.",
                         f"Cell SHA-256: {cell.sha256}.",
                         f"Parent sheet SHA-256: {sheet.sha256}.",
                     ],
-                    version=workbook.version_label,
+                    version=str(lock["version_label"]),
                 )
             )
+
+    if observed_cell_count != lock.get("cell_count"):
+        raise OpenBGISnapshotError("OpenBGI aggregate cell count failed its source lock")
     return records
