@@ -8,6 +8,10 @@ DOCUMENT_ID = "11cTcfq8biFMSppDqG-P-7uIaZMSr7prfsiI5EkVZ0LM"
 CANONICAL_URL = f"https://docs.google.com/document/d/{DOCUMENT_ID}/edit?tab=t.0"
 EXPORT_URL = f"https://docs.google.com/document/d/{DOCUMENT_ID}/export?format=txt"
 EXPECTED_TITLE = "OpenBGI Constitution for Beneficial AGI"
+SNAPSHOT_FILENAME = "document.txt"
+FRONT_MATTER_KEY = "front-matter"
+FRONT_MATTER_HEADING = "Front Matter"
+
 SECTIONS = (
     ("caveats", "Caveats"),
     ("preamble", "Preamble"),
@@ -58,6 +62,7 @@ class OpenBGICell:
 class OpenBGISheet:
     key: str
     heading: str
+    part: str
     content: str
     sha256: str
     characters: int
@@ -128,7 +133,8 @@ def _split_prose_line(line: str) -> list[str]:
         token_start = index
         while token_start > start and not line[token_start - 1].isspace():
             token_start -= 1
-        if line[token_start : index + 1].casefold() in _ABBREVIATIONS:
+        token = line[token_start : index + 1].casefold()
+        if token in _ABBREVIATIONS:
             index += 1
             continue
         next_start = after_punctuation
@@ -148,23 +154,41 @@ def _split_prose_line(line: str) -> list[str]:
     return [cell for cell in cells if cell]
 
 
+def _cells_sha256(cells: tuple[OpenBGICell, ...]) -> str:
+    serialized = "".join(f"{cell.address}\t{cell.text}\n" for cell in cells)
+    return sha256_text(serialized)
+
+
+def _address_cells(texts: list[str]) -> tuple[OpenBGICell, ...]:
+    cells = tuple(
+        OpenBGICell(
+            address=f"A{index}",
+            text=text,
+            sha256=sha256_text(text),
+        )
+        for index, text in enumerate(texts, start=1)
+        if text
+    )
+    if not cells:
+        raise OpenBGISourceError("constitutional sheet has no cells")
+    return cells
+
+
 def _cellize(section_content: str) -> tuple[OpenBGICell, ...]:
     lines = canonicalize(section_content).splitlines()
-    cells: list[OpenBGICell] = []
+    texts: list[str] = []
     for line in lines[1:]:
-        for text in _split_prose_line(line):
-            address = f"A{len(cells) + 1}"
-            cells.append(OpenBGICell(address=address, text=text, sha256=sha256_text(text)))
-    if not cells:
-        raise OpenBGISourceError(f"constitutional sheet has no cells: {lines[0]!r}")
-    return tuple(cells)
+        texts.extend(_split_prose_line(line))
+    return _address_cells(texts)
 
 
-def _cells_sha256(cells: tuple[OpenBGICell, ...]) -> str:
-    return sha256_text("".join(f"{cell.address}\t{cell.text}\n" for cell in cells))
-
-
-def compile_sheet(key: str, heading: str, section_content: str) -> OpenBGISheet:
+def compile_sheet(
+    key: str,
+    heading: str,
+    section_content: str,
+    *,
+    part: str = "body",
+) -> OpenBGISheet:
     content = canonicalize(section_content)
     lines = content.splitlines()
     if not lines or lines[0] != heading:
@@ -173,6 +197,27 @@ def compile_sheet(key: str, heading: str, section_content: str) -> OpenBGISheet:
     return OpenBGISheet(
         key=key,
         heading=heading,
+        part=part,
+        content=content,
+        sha256=sha256_text(content),
+        characters=len(content),
+        cells=cells,
+        cells_sha256=_cells_sha256(cells),
+    )
+
+
+def _is_table_of_contents_line(line: str) -> bool:
+    return any(re.fullmatch(re.escape(heading) + r"\s+\d+", line) for _key, heading in SECTIONS)
+
+
+def compile_front_matter(lines: list[str]) -> OpenBGISheet:
+    source_lines = [line for line in lines if not _is_table_of_contents_line(line)]
+    content = canonicalize("\n".join(source_lines))
+    cells = _address_cells([line.strip() for line in content.splitlines() if line.strip()])
+    return OpenBGISheet(
+        key=FRONT_MATTER_KEY,
+        heading=FRONT_MATTER_HEADING,
+        part="front-matter",
         content=content,
         sha256=sha256_text(content),
         characters=len(content),
@@ -187,6 +232,7 @@ def compile_workbook(source_text: str) -> OpenBGIWorkbook:
     nonempty = [line for line in lines if line.strip()]
     if not nonempty or nonempty[0].strip() != EXPECTED_TITLE:
         raise OpenBGISourceError("source title does not match the canonical Constitution")
+
     version_label = next(
         (
             line.strip()
@@ -197,6 +243,7 @@ def compile_workbook(source_text: str) -> OpenBGIWorkbook:
     )
     if version_label is None:
         raise OpenBGISourceError("source does not expose an expected Draft version label")
+
     positions: list[int] = []
     for _key, heading in SECTIONS:
         matches = [index for index, line in enumerate(lines) if line == heading]
@@ -207,28 +254,46 @@ def compile_workbook(source_text: str) -> OpenBGIWorkbook:
         positions.append(matches[0])
     if positions != sorted(positions):
         raise OpenBGISourceError("constitutional sections are not in the expected order")
-    sheets: list[OpenBGISheet] = []
+
+    front_matter = compile_front_matter(lines[: positions[0]])
+    body_sheets: list[OpenBGISheet] = []
     normalized_sections: list[str] = []
     for index, (key, heading) in enumerate(SECTIONS):
         start = positions[index]
         end = positions[index + 1] if index + 1 < len(positions) else len(lines)
-        sheet = compile_sheet(key, heading, "\n".join(lines[start:end]))
-        sheets.append(sheet)
+        part = "back-matter" if key == "postscript" else "body"
+        sheet = compile_sheet(key, heading, "\n".join(lines[start:end]), part=part)
+        body_sheets.append(sheet)
         normalized_sections.append(sheet.content.strip())
+
     normalized_document = "\n".join(normalized_sections) + "\n"
     return OpenBGIWorkbook(
         document_text=document_text,
         version_label=version_label,
         snapshot_sha256=sha256_text(document_text),
         normalized_document_sha256=sha256_text(normalized_document),
-        sheets=tuple(sheets),
+        sheets=(front_matter, *body_sheets),
     )
+
+
+def _sheet_manifest(sheet: OpenBGISheet) -> dict:
+    return {
+        "key": sheet.key,
+        "heading": sheet.heading,
+        "part": sheet.part,
+        "sha256": sheet.sha256,
+        "characters": sheet.characters,
+        "cell_count": len(sheet.cells),
+        "cells_sha256": sheet.cells_sha256,
+    }
 
 
 def build_manifest(source_text: str) -> dict:
     workbook = compile_workbook(source_text)
+    front_matter = workbook.sheets[0]
+    body_sheets = workbook.sheets[1:]
     return {
-        "schema_version": 2,
+        "schema_version": 3,
         "document_id": DOCUMENT_ID,
         "canonical_url": CANONICAL_URL,
         "export_url": EXPORT_URL,
@@ -236,19 +301,11 @@ def build_manifest(source_text: str) -> dict:
         "version_label": workbook.version_label,
         "snapshot_sha256": workbook.snapshot_sha256,
         "normalized_document_sha256": workbook.normalized_document_sha256,
-        "section_count": len(workbook.sheets),
+        "sheet_count": len(workbook.sheets),
+        "section_count": len(body_sheets),
         "cell_count": workbook.cell_count,
-        "sections": [
-            {
-                "key": sheet.key,
-                "heading": sheet.heading,
-                "sha256": sheet.sha256,
-                "characters": sheet.characters,
-                "cell_count": len(sheet.cells),
-                "cells_sha256": sheet.cells_sha256,
-            }
-            for sheet in workbook.sheets
-        ],
+        "front_matter": _sheet_manifest(front_matter),
+        "sections": [_sheet_manifest(sheet) for sheet in body_sheets],
         "normalization": [
             "UTF-8 text",
             "CRLF/CR normalized to LF",
@@ -256,11 +313,14 @@ def build_manifest(source_text: str) -> dict:
             "runs of blank lines collapsed",
             "canonical snapshot retains document metadata and table-of-contents text",
             "constitutional body extracted by exact section headings",
+            "front matter excludes generated table-of-contents rows but preserves source metadata verbatim",
         ],
         "cellization": [
-            "one sheet per constitutional section",
+            "front-matter metadata lines are preserved as one cell each",
+            "one sheet per constitutional body section",
             "prose paragraphs split at conservative sentence boundaries",
             "bullet-list items preserved as one cell",
+            "Postscript is classified as back matter",
             "cell addresses are stable A1, A2, ... within each sheet",
         ],
     }

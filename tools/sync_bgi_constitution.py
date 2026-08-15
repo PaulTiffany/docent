@@ -14,12 +14,10 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from docent.openbgi_source import (
     EXPORT_URL,
-    SECTIONS,
+    SNAPSHOT_FILENAME,
     OpenBGISourceError,
     build_manifest,
-    compile_sheet,
-    compile_workbook,
-    sha256_text,
+    canonicalize,
     version_directory,
 )
 
@@ -34,7 +32,7 @@ def fetch_source() -> str:
     request = urllib.request.Request(
         EXPORT_URL,
         headers={
-            "User-Agent": "Docent-Source-Witness/2.0 (+https://github.com/PaulTiffany/docent)",
+            "User-Agent": "Docent-Source-Witness/3.0 (+https://github.com/PaulTiffany/docent)",
             "Accept": "text/plain,*/*;q=0.1",
         },
     )
@@ -62,40 +60,8 @@ def manifest_text(manifest: dict) -> str:
     return json.dumps(manifest, indent=2, ensure_ascii=False) + "\n"
 
 
-def snapshot_dir(manifest: dict) -> Path:
-    return SNAPSHOT_ROOT / version_directory(str(manifest["version_label"]))
-
-
-def validate_local_sheets(expected: dict) -> None:
-    root = snapshot_dir(expected)
-    sections = expected.get("sections", [])
-    if [row.get("key") for row in sections] != [key for key, _heading in SECTIONS]:
-        raise SourceError("checked source lock sheets do not match the compiler")
-    rows = {row["key"]: row for row in sections}
-
-    normalized_sections: list[str] = []
-    cell_count = 0
-    for key, heading in SECTIONS:
-        path = root / f"{key}.txt"
-        sheet = compile_sheet(key, heading, path.read_text(encoding="utf-8-sig"))
-        observed = {
-            "key": sheet.key,
-            "heading": sheet.heading,
-            "sha256": sheet.sha256,
-            "characters": sheet.characters,
-            "cell_count": len(sheet.cells),
-            "cells_sha256": sheet.cells_sha256,
-        }
-        if rows.get(key) != observed:
-            raise SourceError(f"checked sheet snapshot failed its source lock: {key}")
-        normalized_sections.append(sheet.content.strip())
-        cell_count += len(sheet.cells)
-
-    body = "\n".join(normalized_sections) + "\n"
-    if sha256_text(body) != expected.get("normalized_document_sha256"):
-        raise SourceError("checked sheet snapshots failed the constitutional-body lock")
-    if cell_count != expected.get("cell_count"):
-        raise SourceError("checked sheet snapshots failed the aggregate cell-count lock")
+def snapshot_path(manifest: dict) -> Path:
+    return SNAPSHOT_ROOT / version_directory(str(manifest["version_label"])) / SNAPSHOT_FILENAME
 
 
 def describe_drift(expected: dict, observed: dict, *, prefix: str) -> str:
@@ -108,16 +74,24 @@ def describe_drift(expected: dict, observed: dict, *, prefix: str) -> str:
         f"expected constitutional-body sha256: {expected.get('normalized_document_sha256')}",
         f"observed constitutional-body sha256: {observed.get('normalized_document_sha256')}",
     ]
-    expected_sections = {row["key"]: row for row in expected.get("sections", [])}
-    observed_sections = {row["key"]: row for row in observed.get("sections", [])}
+    expected_sheets = {
+        row["key"]: row
+        for row in [expected.get("front_matter"), *expected.get("sections", [])]
+        if isinstance(row, dict) and "key" in row
+    }
+    observed_sheets = {
+        row["key"]: row
+        for row in [observed.get("front_matter"), *observed.get("sections", [])]
+        if isinstance(row, dict) and "key" in row
+    }
     changed = [
         key
-        for key in sorted(expected_sections.keys() | observed_sections.keys())
-        if expected_sections.get(key) != observed_sections.get(key)
+        for key in sorted(expected_sheets.keys() | observed_sheets.keys())
+        if expected_sheets.get(key) != observed_sheets.get(key)
     ]
     lines.append("changed sheets: " + (", ".join(changed) if changed else "none"))
     if not changed and expected.get("snapshot_sha256") != observed.get("snapshot_sha256"):
-        lines.append("constitutional body is unchanged; drift is outside the compiled body")
+        lines.append("compiled source views are unchanged; drift is outside those views")
     return "\n".join(lines)
 
 
@@ -128,7 +102,7 @@ def main() -> None:
     parser.add_argument(
         "--write",
         action="store_true",
-        help="Replace the checked source lock and versioned text sheets with the observed source.",
+        help="Replace the checked source lock and versioned document snapshot with the observed source.",
     )
     parser.add_argument(
         "--from-file",
@@ -145,16 +119,18 @@ def main() -> None:
         raise SystemExit(2) from exc
 
     if args.write:
-        root = snapshot_dir(observed)
-        root.mkdir(parents=True, exist_ok=True)
-        workbook = compile_workbook(observed_source)
-        for sheet in workbook.sheets:
-            (root / f"{sheet.key}.txt").write_text(sheet.content, encoding="utf-8")
+        path = snapshot_path(observed)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        for legacy in path.parent.glob("*.txt"):
+            if legacy.name != SNAPSHOT_FILENAME:
+                legacy.unlink()
+        path.write_text(canonicalize(observed_source), encoding="utf-8")
         LOCK_PATH.parent.mkdir(parents=True, exist_ok=True)
         LOCK_PATH.write_text(manifest_text(observed), encoding="utf-8")
         print(
-            "wrote source sheets and lock "
-            f"{observed['version_label']} {observed['normalized_document_sha256']}"
+            "wrote source snapshot and lock "
+            f"{observed['version_label']} {observed['normalized_document_sha256']} "
+            f"({observed['sheet_count']} sheets, {observed['cell_count']} cells)"
         )
         return
 
@@ -167,10 +143,21 @@ def main() -> None:
 
     try:
         expected = json.loads(LOCK_PATH.read_text(encoding="utf-8"))
-        validate_local_sheets(expected)
+        local = build_manifest(snapshot_path(expected).read_text(encoding="utf-8-sig"))
     except (OSError, json.JSONDecodeError, UnicodeError, SourceError) as exc:
-        print(f"checked source sheets failed: {exc}", file=sys.stderr)
+        print(f"checked source snapshot failed: {exc}", file=sys.stderr)
         raise SystemExit(2) from exc
+
+    if expected != local:
+        print(
+            describe_drift(
+                expected,
+                local,
+                prefix="Checked OpenBGI document snapshot drifted from its lock.",
+            ),
+            file=sys.stderr,
+        )
+        raise SystemExit(1)
 
     if expected != observed:
         print(
@@ -187,7 +174,7 @@ def main() -> None:
         "source verified "
         f"{observed['version_label']} "
         f"{observed['normalized_document_sha256']} "
-        f"({observed['cell_count']} cells)"
+        f"({observed['sheet_count']} sheets, {observed['cell_count']} cells)"
     )
 
 

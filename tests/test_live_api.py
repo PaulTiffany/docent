@@ -91,3 +91,31 @@ def test_model_key_is_absent_from_public_and_deployment_assets() -> None:
 
 def test_inference_mode_enum_is_only_live_or_deterministic() -> None:
     assert [mode.value for mode in InferenceMode] == ["live", "deterministic"]
+
+
+def test_deterministic_constitution_stub_uses_document_structure() -> None:
+    client = TestClient(app_module.app)
+
+    authorship = client.post(
+        "/api/chat",
+        json={
+            "session_id": "constitution-author",
+            "message": "Who wrote the OpenBGI Constitution?",
+            "mode": "deterministic",
+        },
+    )
+    assert authorship.status_code == 200
+    assert authorship.json()["reply"] == "Front Matter: Initial author: Ben Goertzel (human)"
+    assert authorship.json()["record_ids"] == ["openbgi.front-matter.A3"]
+
+    caveats = client.post(
+        "/api/chat",
+        json={
+            "session_id": "constitution-caveats",
+            "message": "What does Caveats say?",
+            "mode": "deterministic",
+        },
+    )
+    assert caveats.status_code == 200
+    assert caveats.json()["reply"].startswith("Caveats: This Constitution is both ambitious")
+    assert caveats.json()["record_ids"] == ["openbgi.caveats"]

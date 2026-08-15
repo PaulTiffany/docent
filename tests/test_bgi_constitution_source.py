@@ -6,15 +6,23 @@ import pytest
 from docent.openbgi_source import (
     DOCUMENT_ID,
     EXPECTED_TITLE,
+    FRONT_MATTER_KEY,
     SECTIONS,
-    compile_sheet,
     compile_workbook,
 )
 from tools.sync_bgi_constitution import SourceError, build_manifest
 
 
 def synthetic_source() -> str:
-    parts = [EXPECTED_TITLE, "Draft 0.6", "Initial author: Test Human", ""]
+    parts = [
+        EXPECTED_TITLE,
+        "Draft 0.6",
+        "Initial author: Test Human",
+        "",
+        "Caveats        1",
+        "Preamble        2",
+        "",
+    ]
     for key, heading in SECTIONS:
         parts.extend(
             [
@@ -31,15 +39,34 @@ def test_build_manifest_is_sheet_and_cell_addressable_and_deterministic() -> Non
     second = build_manifest(synthetic_source())
 
     assert first == second
-    assert first["schema_version"] == 2
+    assert first["schema_version"] == 3
     assert first["document_id"] == DOCUMENT_ID
     assert first["version_label"] == "Draft 0.6"
+    assert first["sheet_count"] == len(SECTIONS) + 1
     assert first["section_count"] == len(SECTIONS)
-    assert first["cell_count"] == 2 * len(SECTIONS)
+    assert first["cell_count"] == 3 + 2 * len(SECTIONS)
     assert len(first["snapshot_sha256"]) == 64
+    assert first["front_matter"]["key"] == FRONT_MATTER_KEY
+    assert first["front_matter"]["part"] == "front-matter"
+    assert first["front_matter"]["cell_count"] == 3
     assert [row["key"] for row in first["sections"]] == [key for key, _heading in SECTIONS]
     assert all(row["cell_count"] == 2 for row in first["sections"])
+    assert first["sections"][-1]["part"] == "back-matter"
     assert all(len(row["cells_sha256"]) == 64 for row in first["sections"])
+
+
+def test_front_matter_preserves_metadata_but_excludes_generated_toc_rows() -> None:
+    workbook = compile_workbook(synthetic_source())
+    front_matter = workbook.sheets[0]
+
+    assert front_matter.key == FRONT_MATTER_KEY
+    assert [cell.text for cell in front_matter.cells] == [
+        EXPECTED_TITLE,
+        "Draft 0.6",
+        "Initial author: Test Human",
+    ]
+    assert "Caveats        1" not in front_matter.content
+    assert "Preamble        2" not in front_matter.content
 
 
 def test_compiler_preserves_bullets_and_splits_prose_into_stable_cells() -> None:
@@ -69,27 +96,16 @@ def test_build_manifest_rejects_missing_constitutional_section() -> None:
         build_manifest(source)
 
 
-def test_checked_sheet_snapshots_match_source_lock() -> None:
+def test_checked_document_snapshot_matches_source_lock() -> None:
     root = Path(__file__).parents[1]
     lock = json.loads(
         (root / "sources" / "openbgi-constitution.lock.json").read_text(encoding="utf-8")
     )
-    rows = {row["key"]: row for row in lock["sections"]}
-    sheet_root = root / "sources" / "openbgi-constitution" / "draft-0.6"
+    snapshot = root / "sources" / "openbgi-constitution" / "draft-0.6" / "document.txt"
 
-    observed_cells = 0
-    for key, heading in SECTIONS:
-        sheet = compile_sheet(
-            key,
-            heading,
-            (sheet_root / f"{key}.txt").read_text(encoding="utf-8"),
-        )
-        assert rows[key]["sha256"] == sheet.sha256
-        assert rows[key]["cell_count"] == len(sheet.cells)
-        assert rows[key]["cells_sha256"] == sheet.cells_sha256
-        observed_cells += len(sheet.cells)
-
-    assert lock["schema_version"] == 2
+    observed = build_manifest(snapshot.read_text(encoding="utf-8-sig"))
+    assert observed == lock
+    assert lock["schema_version"] == 3
     assert lock["document_id"] == DOCUMENT_ID
+    assert lock["sheet_count"] == len(SECTIONS) + 1
     assert lock["section_count"] == len(SECTIONS)
-    assert lock["cell_count"] == observed_cells

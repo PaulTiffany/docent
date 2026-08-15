@@ -21,13 +21,15 @@ def test_packaged_defaults_resolve_outside_repository(
 
     assert contract.identity.name
     assert records
+    assert any(record.record_id == "openbgi.front-matter.A3" for record in records)
     assert any(record.record_id == "openbgi.article-xi" for record in records)
     assert any(record.record_id.startswith("openbgi.article-xi.A") for record in records)
     assert manifest.pathways
     assert default_resource("corpus/self-docent.jsonl").exists()
     assert default_resource("corpus/reference.collection.json").exists()
     assert default_resource("sources/openbgi-constitution.lock.json").exists()
-    assert default_resource("sources/openbgi-constitution/draft-0.6/article-xi.txt").exists()
+    assert default_resource("sources/openbgi-constitution/draft-0.6/document.txt").exists()
+    assert not default_resource("sources/openbgi-constitution/draft-0.6/article-xi.txt").exists()
     assert (default_resource_root() / "development" / "capabilities.yaml").exists()
 
 
@@ -36,7 +38,6 @@ def test_installed_style_app_health_uses_packaged_defaults(
     monkeypatch,
 ) -> None:
     monkeypatch.chdir(tmp_path)
-    # Import after changing directory to exercise the installed-package resource resolver.
     from docent.app import app
 
     response = TestClient(app).get("/health")

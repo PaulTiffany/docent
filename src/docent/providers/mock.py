@@ -7,6 +7,21 @@ import time
 from docent.models import ProviderCompletion
 
 
+def _deterministic_reply(record: dict) -> str:
+    content = str(record.get("content") or record.get("title") or "Relevant record found.").strip()
+    record_type = str(record.get("record_type") or "")
+    title = str(record.get("title") or "").strip()
+    if record_type not in {"constitution-sheet", "constitution-cell"} or not title:
+        return content
+
+    label = title.split(" · ", 1)[0].strip()
+    if record_type == "constitution-sheet":
+        lines = content.splitlines()
+        if lines and lines[0].strip() == label:
+            content = "\n".join(lines[1:]).strip()
+    return f"{label}: {content}" if content else label
+
+
 class MockProvider:
     """Deterministic no-key provider for tests, offline use, and corpus debugging."""
 
@@ -32,11 +47,11 @@ class MockProvider:
         if records:
             top = records[0]
             payload = {
-                "reply": str(top.get("content") or top.get("title") or "Relevant record found."),
+                "reply": _deterministic_reply(top),
                 "record_ids": [str(top["record_id"])] if top.get("record_id") else [],
                 "grounded": True,
                 "limitations": [
-                    "Deterministic corpus mode returns the top retrieved record without model inference."
+                    "Deterministic corpus mode returns the top retrieved source record with display-only formatting and no model inference."
                 ],
             }
         else:
