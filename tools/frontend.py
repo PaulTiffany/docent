@@ -8,7 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).parents[1]
 SOURCE = ROOT / "web"
 OUTPUTS = (ROOT / "src" / "docent" / "static", ROOT / "docs")
-ASSETS = ("index.html", "styles.css", "app.js", "config.json")
+ASSETS = ("index.html", "styles.css", "app.js", "config.json", "open-source.html")
 SECRET_FRAGMENTS = ("secret", "token", "password", "credential", "api_key", "apikey")
 
 
