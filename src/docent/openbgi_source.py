@@ -28,7 +28,18 @@ SECTIONS = (
 )
 
 _ABBREVIATIONS = {
-    "e.g.", "i.e.", "mr.", "mrs.", "ms.", "dr.", "prof.", "vs.", "etc.", "u.s.", "u.k.", "no."
+    "e.g.",
+    "i.e.",
+    "mr.",
+    "mrs.",
+    "ms.",
+    "dr.",
+    "prof.",
+    "vs.",
+    "etc.",
+    "u.s.",
+    "u.k.",
+    "no.",
 }
 
 
@@ -177,7 +188,11 @@ def compile_workbook(source_text: str) -> OpenBGIWorkbook:
     if not nonempty or nonempty[0].strip() != EXPECTED_TITLE:
         raise OpenBGISourceError("source title does not match the canonical Constitution")
     version_label = next(
-        (line.strip() for line in lines[:20] if re.fullmatch(r"Draft\s+\d+(?:\.\d+)*", line.strip())),
+        (
+            line.strip()
+            for line in lines[:20]
+            if re.fullmatch(r"Draft\s+\d+(?:\.\d+)*", line.strip())
+        ),
         None,
     )
     if version_label is None:
