@@ -7,12 +7,45 @@ const QUESTIONS = [
   "Does Docent use OmegaClaw?",
 ];
 
+const WAKE_RETRY_DELAYS_MS = [2000, 3000, 5000, 8000];
 const state = { config: null, serverConfig: null, apiBase: "", sessionId: crypto.randomUUID(), projectLoaded: false, mode: null };
 const $ = (selector) => document.querySelector(selector);
 
 function normalizedBase(value) { return (value || "").trim().replace(/\/+$/, ""); }
 function endpoint(path) { return `${state.apiBase}${path}`; }
 function isPages() { return location.hostname.endsWith("github.io"); }
+function sleep(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
+
+function isSpaceLifecycleText(text) {
+  return (text || "").trim().toLowerCase().startsWith("the space");
+}
+
+function backendWakingError() {
+  const error = new Error("Docent is still waking up. Please try again in a moment.");
+  error.code = "backend_waking";
+  return error;
+}
+
+async function fetchApiJson(path, options = {}, { wakeRetries = 0, onWake = null } = {}) {
+  for (let attempt = 0; ; attempt += 1) {
+    const response = await fetch(endpoint(path), options);
+    const text = await response.text();
+    let body = null;
+    try {
+      body = text ? JSON.parse(text) : null;
+    } catch {
+      if (!isSpaceLifecycleText(text)) {
+        throw new Error(`Public API returned a non-JSON response (HTTP ${response.status}).`);
+      }
+      if (attempt >= wakeRetries) throw backendWakingError();
+      if (onWake) onWake(attempt + 1, wakeRetries);
+      const delayIndex = Math.min(attempt, WAKE_RETRY_DELAYS_MS.length - 1);
+      await sleep(WAKE_RETRY_DELAYS_MS[delayIndex]);
+      continue;
+    }
+    return { response, body };
+  }
+}
 
 function setConnection(kind, label, detail) {
   $("#connection-dot").className = `dot ${kind}`;
@@ -40,15 +73,26 @@ async function loadConfig() {
 async function checkConnection() {
   setConnection("", "Connecting", "Checking public API…");
   try {
-    const response = await fetch(endpoint("/api/config/public"));
+    const { response, body: config } = await fetchApiJson(
+      "/api/config/public",
+      {},
+      {
+        wakeRetries: 4,
+        onWake: () => setConnection("", "Waking up", "Docent is waking up on Hugging Face…"),
+      },
+    );
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const config = await response.json(); state.serverConfig = config;
+    state.serverConfig = config;
     if (!state.mode || !config.enabled_inference_modes.includes(state.mode)) state.mode = config.default_inference_mode;
     const live = config.live_inference_enabled;
     const detail = live ? `Live inference via ${config.provider === "openrouter" ? "OpenRouter" : config.provider} · configured route: ${config.configured_model}` : "Deterministic corpus mode · no model inference";
     setConnection("ok", "Ready", detail); updateModeControls();
     $("#setup-panel").classList.add("hidden");
   } catch (error) {
+    if (error.code === "backend_waking") {
+      setConnection("", "Waking up", "Docent is still waking up · try again in a moment");
+      return;
+    }
     setConnection("error", "Unavailable", `Public API could not be reached · ${error.message}`);
   }
 }
@@ -95,10 +139,16 @@ async function sendQuestion(question, mode = state.mode) {
   if (!state.apiBase) { $("#setup-panel").classList.remove("hidden"); $("#api-dialog").showModal(); return; }
   addMessage("human", question); $("#send-chat").disabled = true; setConnection("", "Sending", mode === "live" ? "Waiting for live bounded synthesis…" : "Retrieving one deterministic record…");
   try {
-    const response = await fetch(endpoint("/api/chat"), { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ session_id: state.sessionId, message: question, mode }) });
-    const body = await response.json();
+    const { response, body } = await fetchApiJson(
+      "/api/chat",
+      { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ session_id: state.sessionId, message: question, mode }) },
+      {
+        wakeRetries: 4,
+        onWake: () => setConnection("", "Waking up", "Docent is waking up · your question will retry automatically"),
+      },
+    );
     if (!response.ok) {
-      const detail = typeof body.detail === "object" ? body.detail : { code: "live_inference_unavailable", message: String(body.detail || `HTTP ${response.status}`) };
+      const detail = typeof body?.detail === "object" ? body.detail : { code: "live_inference_unavailable", message: String(body?.detail || `HTTP ${response.status}`) };
       const retry = detail.retry_after_seconds == null ? "" : ` Retry after about ${detail.retry_after_seconds} seconds.`;
       addMessage("error", `${detail.message || "Live inference failed."}${retry}`);
       if (mode === "live" && state.serverConfig?.deterministic_mode_enabled) $("#deterministic-fallback").classList.remove("hidden");
@@ -106,6 +156,11 @@ async function sendQuestion(question, mode = state.mode) {
     }
     addMessage("docent", body.reply, body); await checkConnection();
   } catch (error) {
+    if (error.code === "backend_waking") {
+      addMessage("error", "Docent is still waking up. Please try your question again in a moment.");
+      setConnection("", "Waking up", "Hugging Face is still starting the Docent Space");
+      return;
+    }
     addMessage("error", `The public Docent API could not be reached. ${error.message}`);
     setConnection("error", "Unavailable", "Check the API URL and CORS origin");
   } finally { $("#send-chat").disabled = false; }
@@ -125,7 +180,18 @@ function pathwayCard(assessment, blocked = false) {
 async function loadProjectState() {
   if (!state.apiBase) { $("#state-status").textContent = "Set a public API URL to inspect live project state."; return; }
   try {
-    const [capabilities, pathways, frontier, experiments] = await Promise.all(["capabilities","pathways","frontier","experiments"].map(async (resource) => { const r = await fetch(endpoint(`/api/development/${resource}`)); if (!r.ok) throw new Error(`${resource}: HTTP ${r.status}`); return r.json(); }));
+    const [capabilities, pathways, frontier, experiments] = await Promise.all(["capabilities","pathways","frontier","experiments"].map(async (resource) => {
+      const { response, body } = await fetchApiJson(
+        `/api/development/${resource}`,
+        {},
+        {
+          wakeRetries: 2,
+          onWake: () => { $("#state-status").textContent = "Docent is waking up before loading project state…"; },
+        },
+      );
+      if (!response.ok) throw new Error(`${resource}: HTTP ${response.status}`);
+      return body;
+    }));
     $("#capabilities").innerHTML = statusRows(capabilities);
     const selected = pathways.find((item) => frontier.selected_pathway_ids.includes(item.pathway_id));
     $("#selected-pathway").innerHTML = selected ? `<span class="status">${escapeHtml(selected.status)}</span><h3>${escapeHtml(selected.title)}</h3><p>${escapeHtml(selected.public_explanation)}</p><p><strong>Completion evidence:</strong></p><ul>${selected.completion_evidence.map((item) => `<li>${escapeHtml(item.description)} — ${escapeHtml(item.status)} (${escapeHtml(item.evidence_type)})</li>`).join("")}</ul>` : "No selected pathway.";
@@ -134,7 +200,9 @@ async function loadProjectState() {
     $("#available-pathways").innerHTML = frontier.admissible_pathways.map((item) => pathwayCard(item)).join("");
     $("#blocked-pathways").innerHTML = frontier.blocked_pathways.map((item) => pathwayCard(item,true)).join("");
     $("#state-status").classList.add("hidden"); state.projectLoaded = true;
-  } catch (error) { $("#state-status").textContent = `Project state unavailable: ${error.message}`; }
+  } catch (error) {
+    $("#state-status").textContent = error.code === "backend_waking" ? "Docent is still waking up. Project state will be available shortly." : `Project state unavailable: ${error.message}`;
+  }
 }
 
 document.querySelectorAll(".nav-tab").forEach((tab) => tab.addEventListener("click", () => showView(tab.dataset.view)));

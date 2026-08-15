@@ -40,8 +40,22 @@ def test_missing_api_url_has_setup_state_and_local_override() -> None:
     assert "deterministic-fallback" in script
     assert "actual_model" in script
     assert "message: question, mode" in script
-    assert 'fetch(endpoint("/api/chat")' in script
+    assert 'fetchApiJson(\n      "/api/chat"' in script
     assert "openrouter.ai/api" not in script
+
+
+def test_hugging_face_lifecycle_text_is_handled_before_json_parsing() -> None:
+    script = (SOURCE / "app.js").read_text(encoding="utf-8")
+
+    assert "isSpaceLifecycleText" in script
+    assert 'startsWith("the space")' in script
+    assert "await response.text()" in script
+    assert "JSON.parse(text)" in script
+    assert 'error.code = "backend_waking"' in script
+    assert "Docent is waking up" in script
+    assert "your question will retry automatically" in script
+    assert "WAKE_RETRY_DELAYS_MS" in script
+    assert "const body = await response.json();" not in script
 
 
 def test_fastapi_serves_canonical_frontend_assets() -> None:
