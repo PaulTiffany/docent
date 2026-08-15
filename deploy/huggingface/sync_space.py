@@ -17,7 +17,7 @@ FILES = (
     "NOTICE",
     "ACKNOWLEDGMENTS.md",
 )
-DIRECTORIES = ("src", "config", "corpus", "development", "schemas")
+DIRECTORIES = ("src", "config", "corpus", "sources", "development", "schemas")
 
 
 def stage(destination: Path) -> None:

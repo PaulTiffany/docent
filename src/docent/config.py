@@ -22,7 +22,9 @@ class Settings(BaseSettings):
     site_url: str | None = Field(default=None, max_length=2048)
     app_title: str | None = Field(default=None, min_length=1, max_length=128)
     base_url: str = "https://api.openai.com/v1"
-    corpus_path: Path = Field(default_factory=lambda: default_resource("corpus/self-docent.jsonl"))
+    corpus_path: Path = Field(
+        default_factory=lambda: default_resource("corpus/reference.collection.json")
+    )
     contract_path: Path = Field(default_factory=lambda: default_resource("config/docent.yaml"))
     development_root: Path = Field(default_factory=default_resource_root)
     history_limit: int = Field(default=5, ge=0, le=20)

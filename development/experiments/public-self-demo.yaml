@@ -1,34 +1,42 @@
 experiment_id: public-self-demo-2026-08
-title: Living self-docent feedback experiment
+title: Living reference Docent feedback experiment
 selected_pathway_id: public-self-demo
-hypothesis: A living self-docent will produce more useful design feedback than adding another invisible runtime layer before users can interact with the artifact.
+hypothesis: A living Docent that exposes both its own machinery and a real source-grounded worked example will produce more useful human feedback than adding another invisible runtime layer before users can interact with the evidence contract.
 status: active
 setup:
   - Publish a deterministic mock-mode self-docent.
   - Expose authored capabilities, pathways, decisions, experiments, and qualitative pressures.
+  - Add the verified OpenBGI Constitution Draft 0.6 as a worked source collection without model synthesis.
   - Keep incomplete runtime and room capabilities explicitly labeled.
 expected_observations:
   - Visitors ask questions that reveal missing or unclear project explanations.
+  - Constitution readers expose where source language is hard to navigate or easy to misread.
+  - Follow-up questions reveal useful human learning trajectories before any model-generated explanation is introduced.
   - Human feedback changes the framing or ordering of future pathway decisions.
 completion_evidence:
   - A public Pages URL is observed.
   - A public mock Space health endpoint is observed.
-  - At least one real browser-to-Space chat is observed.
+  - At least one real browser-to-Space self-docent chat is observed.
+  - At least one real browser-to-Space OpenBGI source retrieval is observed.
 failure_conditions:
   - The demo implies incomplete capabilities are working.
   - The site requires a model secret for basic use.
+  - Visitors cannot distinguish exact constitutional source from authored or model interpretation.
   - Visitors cannot distinguish authored project state from model inference.
 safety_boundaries:
   - No development write endpoints.
   - No automatic pathway selection.
   - No secret in browser assets.
   - Public records only enter retrieval.
+  - OpenBGI source drift fails visibly rather than silently changing the served snapshot.
 observations:
   - Repository validation passed for manifests, public retrieval, self-corpus, mock chat, frontend generation, packaging, and deployment assets.
   - An installed wheel served a healthy mock application outside the checkout.
   - The local Docker CLI was present but its Linux engine was unavailable; GitHub CI subsequently built the non-root image and observed a healthy container.
   - GitHub Pages served the canonical client at https://paultiffany.github.io/docent/ on 2026-08-05.
-  - The public Hugging Face Space reported provider=mock and a healthy 48-record corpus at https://paultiffany-docent.hf.space/health on 2026-08-05.
+  - The public Hugging Face Space reported provider=mock and a healthy corpus at https://paultiffany-docent.hf.space/health on 2026-08-05.
   - A Pages-origin cross-origin chat reached the Space and returned grounded authored evidence that explicitly preserved human roadmap selection on 2026-08-05.
-  - The experiment remains active because useful human design feedback has not yet been collected; live operation alone does not establish the hypothesis.
+  - On 2026-08-15 the canonical OpenBGI Constitution Google Doc was independently verified as Draft 0.6 and pinned by whole-document and per-section hashes.
+  - The reference collection now composes the self-docent with 16 exact normalized OpenBGI source sections; mediated AlphaClaw inference remains outside the current runtime.
+  - The experiment remains active because human learning feedback on the Constitution worked example is now the primary observation target.
 result_status: active

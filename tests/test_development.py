@@ -22,6 +22,7 @@ def test_development_manifests_validate_and_are_unique() -> None:
 def test_current_capabilities_and_human_selection_are_honest() -> None:
     manifest = load_development_manifest(ROOT)
     capabilities = {item.capability_id: item for item in manifest.capabilities}
+    pathways = {item.pathway_id: item for item in manifest.pathways}
     experiments = {item.experiment_id: item for item in manifest.experiments}
 
     assert capabilities["bounded-single-user-chat"].status == "implemented"
@@ -29,8 +30,9 @@ def test_current_capabilities_and_human_selection_are_honest() -> None:
     assert capabilities["mediated-room-runtime"].status == "absent"
     assert capabilities["external-runtime-adapter"].status == "absent"
     assert experiments["public-self-demo-2026-08"].result_status == "active"
-    assert experiments["openrouter-live-inference-demo"].status == "active"
-    assert experiments["openrouter-live-inference-demo"].result_status == "active"
+    assert pathways["openrouter-live-inference"].status == "superseded"
+    assert experiments["openrouter-live-inference-demo"].status == "completed"
+    assert experiments["openrouter-live-inference-demo"].result_status == "supported"
     assert all(decision.decided_by == "human" for decision in manifest.decisions)
 
 
@@ -43,15 +45,13 @@ def test_frontier_derivation_is_deterministic_and_has_no_optimum() -> None:
     assert first == second
     assert first.optimal_pathway is None
     assert first.human_selection_required is True
-    assert first.selected_pathway_ids == [
-        "openrouter-live-inference",
-        "public-self-demo",
-    ]
+    assert first.selected_pathway_ids == ["public-self-demo"]
     assert [item.pathway.pathway_id for item in first.admissible_pathways] == sorted(
         item.pathway.pathway_id for item in first.admissible_pathways
     )
     blocked = {item.pathway.pathway_id: item for item in first.blocked_pathways}
     assert "external-runtime-adapter" in blocked
+    assert "openrouter-live-inference" in blocked
     assert blocked["external-runtime-adapter"].unsatisfied_preconditions
 
 

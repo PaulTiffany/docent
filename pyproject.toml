@@ -42,11 +42,13 @@ where = ["src"]
 [tool.setuptools.package-data]
 docent = [
   "static/*.html", "static/*.css", "static/*.js", "static/*.json",
-  "resources/config/*.yaml", "resources/corpus/*.jsonl",
+  "resources/config/*.yaml", "resources/corpus/*.jsonl", "resources/corpus/*.json",
   "resources/development/*.yaml", "resources/development/*.md",
   "resources/development/pathways/*.yaml",
   "resources/development/decisions/*.yaml",
   "resources/development/experiments/*.yaml",
+  "resources/sources/*.json", "resources/sources/*.md",
+  "resources/sources/openbgi-constitution/draft-0.6/*.txt",
 ]
 
 [tool.pytest.ini_options]

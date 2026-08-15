@@ -11,9 +11,11 @@ OUTPUT = ROOT / "src" / "docent" / "resources"
 FILES = {
     ROOT / "config" / "docent.yaml": OUTPUT / "config" / "docent.yaml",
     ROOT / "corpus" / "self-docent.jsonl": OUTPUT / "corpus" / "self-docent.jsonl",
+    ROOT / "corpus" / "reference.collection.json": OUTPUT / "corpus" / "reference.collection.json",
 }
 DIRECTORIES = {
     ROOT / "development": OUTPUT / "development",
+    ROOT / "sources": OUTPUT / "sources",
 }
 
 

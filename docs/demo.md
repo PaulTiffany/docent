@@ -1,6 +1,6 @@
 # Demo checklist
 
-**Want real synthesis? Jump directly to [Turn on free real inference](#turn-on-free-real-inference). The local no-secret path remains the quickest smoke test.**
+The reference demo is intentionally useful without model inference. Its default collection contains the self-docent plus the verified OpenBGI Constitution for Beneficial AGI, Draft 0.6 worked example.
 
 ## Shortest path: local, no secrets
 
@@ -8,89 +8,64 @@
 - [ ] Run `pip install -e ".[dev]"`.
 - [ ] Run `docent-serve`.
 - [ ] Open <http://localhost:7860>.
-- [ ] Ask â€œWhat can this project do now?â€
+- [ ] Ask **“What is the Wisdom Clause?”**
+- [ ] Confirm the answer is the exact pinned Article XI source record and provenance says deterministic / no model inference.
+- [ ] Ask **“Does Docent use OmegaClaw?”** and confirm the self-docent remains part of the same reference collection.
 
-Mock mode is the default. Chat, source labels, project state, and deployment guidance all work without a model key.
+## Verify the canonical Constitution source
 
-## Public path before adding a provider key
+The served Constitution snapshot is local and hash-pinned; normal runtime does not fetch Google Docs. Source drift is checked independently.
 
-### Paul only has to do these things
+- [ ] Run the **Verify BGI Constitution source** workflow.
+- [ ] Confirm it verifies Draft 0.6 against `sources/openbgi-constitution.lock.json`.
+- [ ] Do not advance the lock automatically when the remote document changes; inspect the changed sections first.
 
-- [ ] Create a narrowly scoped Hugging Face user access token with write access to the intended Space from <https://huggingface.co/settings/tokens>.
-- [ ] In GitHub repository Settings > Secrets and variables ? Actions, add secret `HF_TOKEN`.
-- [ ] Add variable `HF_SPACE_ID` with `owner/name` form.
+The same verifier runs daily. It needs no secret.
+
+## Public reference path
+
+### GitHub / Hugging Face deployment
+
+- [ ] Keep one narrowly scoped Hugging Face deployment token in GitHub Actions secret `HF_TOKEN`.
+- [ ] Keep GitHub variable `HF_SPACE_ID=PaulTiffany/docent`.
 - [ ] Run the **Synchronize Hugging Face Space** workflow.
-- [ ] Add or update GitHub variable `DOCENT_API_BASE_URL` to the public Space origin, for example `https://owner-name.hf.space`.
-- [ ] In repository Settings > Pages, choose **GitHub Actions** as the source once.
-- [ ] Run **Deploy Pages demo** (or merge to `main`, where it runs automatically).
+- [ ] Set GitHub variable `DOCENT_API_BASE_URL` to the public Space origin.
+- [ ] Use **GitHub Actions** as the Pages source and run **Deploy Pages demo** if needed.
 
-### Verify the Space
+The synchronizer uploads only the intended runtime files and replaces stale files in the Space repository. Space variables and secrets are separate settings and are not changed by repository synchronization.
 
-- [ ] Open `https://<space-host>/health`; confirm `status` is `ok` and `provider` is `mock`.
-- [ ] In the Space settings, use Variables for:
-  - `DOCENT_ENVIRONMENT=production`
-  - `DOCENT_PROVIDER=mock`
-  - `DOCENT_ALLOWED_ORIGINS=https://paultiffany.github.io`
-  - `DOCENT_ROOM_RESET_ENABLED=false`
-- [ ] Confirm no model secret is needed.
+### Hugging Face reference runtime
 
-### Verify Pages
-
-- [ ] Open <https://paultiffany.github.io/docent/> after the Pages workflow succeeds.
-- [ ] Confirm the header says **Deterministic mock mode**.
-- [ ] Ask â€œWhy was the public demo selected?â€ and inspect the source record.
-- [ ] Open **Project State** and confirm absent runtime capabilities remain visibly absent.
-
-If Pages says **Setup needed**, open **API settings** and enter the public Space origin. The browser stores only that public URL. â€œUnavailableâ€ commonly means the URL is wrong, the Space is sleeping/building, `/health` is failing, or `DOCENT_ALLOWED_ORIGINS` does not include `https://paultiffany.github.io`.
-
-## Add a real model later
-
-Set these Hugging Face Space Variables:
-
-- `DOCENT_PROVIDER=openai_compatible`
-- `DOCENT_MODEL=<chosen model>`
-- `DOCENT_BASE_URL=<provider API base>`
-- `DOCENT_ALLOWED_ORIGINS=https://paultiffany.github.io`
-- `DOCENT_ENVIRONMENT=production`
-- `DOCENT_ROOM_RESET_ENABLED=false`
-
-Add `DOCENT_API_KEY` only in Hugging Face Space **Secrets**. Never put it in Pages, GitHub variables, repository files, or frontend configuration.
-
-## Live evidence discipline
-
-Repository checks can make the pathway implementation-complete. Do not mark it demonstrated until the Pages URL, public Space `/health`, and one real browser-to-Space chat have each been observed and recorded.
-
-## Turn on free real inference
-
-The provider key stays entirely in Hugging Face. Never paste it into Pages, GitHub variables, browser storage, chat, or repository files.
-
-- [ ] Create an OpenRouter account and create a narrowly scoped API key in the OpenRouter dashboard.
-- [ ] Open the Hugging Face Space **Settings** page.
-- [ ] Add one Space **Secret** named `DOCENT_API_KEY` with the OpenRouter key as its value.
-- [ ] Set these Space **Variables**:
+Use only these runtime variables for the reference Space:
 
 ```text
 DOCENT_ENVIRONMENT=production
-DOCENT_PROVIDER=openai_compatible
-DOCENT_BASE_URL=https://openrouter.ai/api/v1
-DOCENT_MODEL=openrouter/free
+DOCENT_PROVIDER=mock
 DOCENT_ALLOWED_ORIGINS=https://paultiffany.github.io
 DOCENT_ROOM_RESET_ENABLED=false
-DOCENT_SITE_URL=https://paultiffany.github.io/docent/
-DOCENT_APP_TITLE=Docent
-DOCENT_RATE_LIMIT_PER_HOUR=10
-DOCENT_LIVE_DAILY_BUDGET=45
-DOCENT_ALLOW_DETERMINISTIC_MODE=true
 ```
 
-- [ ] Restart or rebuild the Space.
-- [ ] Open `GET https://paultiffany-docent.hf.space/health`.
-- [ ] Open `GET https://paultiffany-docent.hf.space/api/config/public`; confirm `live_inference_enabled` is true, the default mode is `live`, and no key appears.
+No model credential is required. If the Space still contains an old `DOCENT_API_KEY` from the completed direct-provider experiment, remove it. Old provider-selection variables such as `DOCENT_MODEL`, `DOCENT_BASE_URL`, `DOCENT_SITE_URL`, `DOCENT_APP_TITLE`, and live-budget overrides are unnecessary for the deterministic reference deployment and may also be removed.
+
+### Verify the Space
+
+- [ ] Open `https://paultiffany-docent.hf.space/health`.
+- [ ] Confirm `status=ok` and `provider=mock`.
+- [ ] Confirm the record count includes the self-docent, OpenBGI sections, and generated development records.
+- [ ] Open `/api/config/public` and confirm live inference is disabled and deterministic mode is enabled.
+
+### Verify Pages
+
 - [ ] Open <https://paultiffany.github.io/docent/>.
-- [ ] Ask: “Why does Docent represent future development pathways rather than use a conventional roadmap?”
-- [ ] Confirm the response displays `live`, configured route `openrouter/free`, an actual responding model when reported, grounding, and supporting records.
-- [ ] Explicitly switch to deterministic corpus mode and confirm it says “no model inference.”
+- [ ] Confirm both **Self-docent** and **OpenBGI Constitution · Draft 0.6** question groups are visible.
+- [ ] Ask **“What are the anti-capture tripwires?”** and inspect the `openbgi.article-vi` source label.
+- [ ] Ask **“What is the Wisdom Clause?”** and inspect the `openbgi.article-xi` source label.
+- [ ] Open **Project State** and confirm incomplete runtime capabilities remain visibly incomplete.
 
-To pin another model later, change only `DOCENT_MODEL` to another supported OpenRouter slug and restart the Space. A specific free model uses a currently supported `:free` slug; a paid model uses the same endpoint and server-side key. No code change is required. Model availability and limits change, so check current official OpenRouter documentation.
+If Pages says **Setup needed**, open **API settings** and enter the public Space origin. The browser stores only that public URL.
 
-`openrouter/free` is a router route rather than a promise of one fixed model. Docent therefore reports the configured route and the actual response model separately.
+## Future mediated inference
+
+The next inference path is not another browser or Space model credential. Docent should continue to authorize evidence and validate citations while a separately deployed AlphaClaw runtime provides mediated OmegaClaw inference behind a narrow provider adapter.
+
+Until that adapter is demonstrated, the public reference deployment should remain deterministic. This preserves a useful artifact even when no inference service is available and keeps the OpenBGI evidence contract independent of any particular model provider.

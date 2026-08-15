@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "files": [
+    "self-docent.jsonl"
+  ],
+  "exclude_record_ids": [
+    "docent.openrouter-gateway",
+    "docent.live-budget"
+  ],
+  "builtins": [
+    {
+      "kind": "openbgi-constitution",
+      "source_root": "../sources/openbgi-constitution/draft-0.6",
+      "lock": "../sources/openbgi-constitution.lock.json"
+    }
+  ]
+}

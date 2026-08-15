@@ -9,6 +9,7 @@ COPY pyproject.toml README.md LICENSE NOTICE ACKNOWLEDGMENTS.md ./
 COPY src ./src
 COPY config ./config
 COPY corpus ./corpus
+COPY sources ./sources
 COPY development ./development
 COPY schemas ./schemas
 

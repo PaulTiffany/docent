@@ -1,6 +1,6 @@
 # Docent
 
-Docent is a bounded, source-grounded conversational guide. This repository's default example is a self-docent: it explains its own implementation, limitations, deployment, and authored development frontier from validated public records.
+Docent is a bounded, source-grounded conversational guide. The repository is deliberately useful without model inference: its default reference collection contains a self-docent plus a worked example built from the OpenBGI Constitution for Beneficial AGI, Draft 0.6.
 
 ## See something alive
 
@@ -14,53 +14,40 @@ pip install -e ".[dev]"
 docent-serve
 ```
 
-Open <http://localhost:7860> and ask **“What can this project do now?”** The default `mock` provider deterministically returns the best matching public record. See the short [demo checklist](docs/demo.md).
+Open <http://localhost:7860>. Ask **“What is the Wisdom Clause?”** to retrieve the verified Article XI source record, or ask **“What can this project do now?”** to stay in the self-docent. The default `mock` provider returns the best matching public record deterministically and labels the response as no model inference.
 
-The expected Pages URL after merge and successful deployment is <https://paultiffany.github.io/docent/>. It is not claimed live until observed.
+Expected public client: <https://paultiffany.github.io/docent/>.
 
-## Ask it about itself
+## Two reference surfaces, one evidence contract
 
-Useful questions include:
+### Self-docent
+
+The self-docent explains the implementation, limitations, deployment, and authored development frontier from validated public records. Useful questions include:
 
 - What is a docent?
 - How is this different from unrestricted chat with a PDF?
 - What remains incomplete?
-- Why was the public demo selected?
-- What would a mediated runtime unlock?
-- Which roadmap did the AI prove is optimal?
+- Does Docent use OmegaClaw?
 
-`POST /api/chat` remains the working bounded single-user path. The `/api/room` transport is partial: it stores messages and queues turns but has no connected agent runtime and must not be described as a working agent room.
+### Worked example: OpenBGI Constitution
 
-## Inspect the project frontier
+The OpenBGI worked example is not an LLM paraphrase. Docent serves exact normalized constitutional sections from a checked Draft 0.6 snapshot. Each section is bound to the canonical Google Doc ID and a SHA-256 in `sources/openbgi-constitution.lock.json`.
 
-The `development/` manifests make capabilities, pathways, a human decision, and an active experiment part of the artifact. `GET /api/development/frontier` deterministically derives admissible and blocked pathways from declared preconditions.
+Useful questions include:
 
-“Bellman-style pressures” are a design metaphor: authors record immediate usefulness, cost, risk, information gain, reversibility, lock-in, and future option value with a bounded qualitative vocabulary. Docent computes no aggregate score, claims no mathematical optimum, and never selects a pathway automatically.
+- What are Joy, Growth, Choice, and Continuity?
+- What happens when constitutional principles conflict?
+- What are the anti-capture tripwires?
+- What is the Wisdom Clause?
+- How should the Constitution be interpreted?
 
-Validate the model with:
+The independent **Verify BGI Constitution source** workflow fetches the canonical public Google Docs export and compares it with the checked lock every day. Source drift goes red; it does not silently rewrite the served snapshot.
 
-```bash
-docent-development-validate
-```
+## Why keep deterministic mode first-class?
 
-## Build another docent
+The evidence boundary should survive changes in the intelligence behind it. Deterministic mode makes retrieval, source attribution, deployment, and corpus debugging inspectable with zero inference. A later runtime can synthesize across multiple authorized records without changing what counts as evidence.
 
-Author complete `DocentRecord` objects in JSONL, adjust `config/docent.yaml`, and validate:
-
-```bash
-docent-validate
-```
-
-The default corpus is `corpus/self-docent.jsonl`. Development records are generated from authoritative manifests rather than duplicated into prose. See [corpus authoring](docs/CORPUS_AUTHORING.md).
-
-## Run and deploy
-
-- Local: `docent-serve`
-- Docker: `docker build -t docent . && docker run --rm -p 7860:7860 docent`
-- GitHub Pages: static client built from `web/`
-- Hugging Face: Docker Space on port 7860; live OpenRouter inference when configured, with explicit deterministic fallback
-
-Provider credentials stay server-side. Pages receives only a public API URL. See [deployment](docs/deployment.md).
+The intended next mediated runtime is AlphaClaw/OmegaClaw. It is **not bundled or running in this repository yet**. Docent should continue to own evidence authorization and response validation while AlphaClaw supplies cognition behind a narrow adapter.
 
 ## Public API
 
@@ -71,16 +58,45 @@ Provider credentials stay server-side. Pages receives only a public API URL. See
 - read-only `/api/development/*`
 - partial `/api/room/*`
 
-Public retrieval excludes `restricted` and `refuse-extraction` records in gateway code before prompt or response construction.
+`POST /api/chat` is the working bounded single-user path. The `/api/room` transport stores messages and queues turns but has no connected agent runtime and must not be described as a working agent room.
+
+Public retrieval excludes `restricted` and `refuse-extraction` records before prompt or response construction.
+
+## Inspect the project frontier
+
+The `development/` manifests make capabilities, pathways, human decisions, and experiments part of the artifact. `GET /api/development/frontier` deterministically derives admissible and blocked pathways from declared preconditions.
+
+“Bellman-style pressures” are qualitative authored design notes, not an optimizer. Docent computes no aggregate score and never chooses the roadmap automatically.
+
+Validate with:
+
+```bash
+docent-validate
+docent-development-validate
+python tools/sync_bgi_constitution.py
+```
+
+The third command performs a network source check. Normal serving and CI tests use the local checked snapshot and need no network.
+
+## Build another docent
+
+A collection manifest can compose JSONL records with verified built-in source adapters. The default is `corpus/reference.collection.json`, which combines `corpus/self-docent.jsonl` with the OpenBGI snapshot. Individual JSONL corpora remain supported for simpler deployments.
+
+See [corpus authoring](docs/CORPUS_AUTHORING.md).
+
+## Run and deploy
+
+- Local: `docent-serve`
+- Docker: `docker build -t docent . && docker run --rm -p 7860:7860 docent`
+- GitHub Pages: static client built from `web/`
+- Hugging Face: Docker Space on port 7860, deterministic reference mode
+
+Pages receives only a public Docent API URL. The Hugging Face synchronizer is manual and uses one narrowly scoped deployment token; the reference Space itself requires no model credential. See [deployment](docs/deployment.md) and the [demo checklist](docs/demo.md).
 
 ## Scope boundary
 
-This repository contains no deleted subject-specific atlas, prior hosted-space identity, private token, conference-specific or paper-specific corpus, OmegaClaw adapter, external runtime, WebSocket agent channel, durable database, or production multi-user agent room.
+This repository contains no private token, production multi-user agent room, durable database, bundled OmegaClaw runtime, or AlphaClaw adapter. The generic provider seam remains in the implementation, but the completed direct-provider demo is no longer the reference deployment path.
 
-Development was informed by public-agent experiments using OmegaClaw. OmegaClaw is credited in [ACKNOWLEDGMENTS.md](ACKNOWLEDGMENTS.md) but is not bundled or running here.
+Development was informed by public-agent experiments using OmegaClaw. OmegaClaw is credited in [ACKNOWLEDGMENTS.md](ACKNOWLEDGMENTS.md).
 
 MIT licensed. See [LICENSE](LICENSE).
-
-## Live inference without surrendering evidence control
-
-The reference deployment can use OpenRouter through the generic OpenAI-compatible provider. Docent still retrieves and authorizes public evidence, builds the bounded prompt, validates the response envelope, and publishes gateway-authored provenance. The operator changes models with `DOCENT_MODEL`; visitors cannot supply provider settings. Deterministic corpus mode remains available for offline use, tests, corpus debugging, and explicit fallback. See [the demo checklist](docs/demo.md#turn-on-free-real-inference).

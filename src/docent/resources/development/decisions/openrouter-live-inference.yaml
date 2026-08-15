@@ -1,9 +1,9 @@
 decision_id: select-openrouter-live-inference-2026-08-05
 date: 2026-08-05
-status: accepted
+status: superseded
 selected_pathway_id: openrouter-live-inference
-context: [The deterministic public demo is live and bounded, Real synthesis is needed to test multi-record explanations, Model choice should remain operational configuration]
+context: [The deterministic public demo was live and bounded, Real synthesis was needed to test multi-record explanations, Model choice was kept as operational configuration]
 rationale: [Use the existing generic OpenAI-compatible boundary, Keep evidence and publication controlled by Docent, Protect the shared credential with rate and attempt bounds, Require visitors to select deterministic fallback explicitly]
 options_preserved: [evaluation-harness, research-observability, mediated-in-process-runtime, external-runtime-adapter]
-consequences: [One Hugging Face Space secret is required for live mode, External availability becomes an operational dependency, Mock-only operation remains supported]
+consequences: [The direct-provider experiment established the provider seam, The reference deployment can return to deterministic mode with no model credential, Future mediated inference can move behind the external runtime boundary]
 decided_by: human

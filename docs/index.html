@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="A bounded self-docent and inspectable development frontier.">
+  <meta name="description" content="A bounded self-docent with a verified OpenBGI Constitution worked example.">
   <title>Docent — bounded evidence, visible options</title>
   <link rel="stylesheet" href="./styles.css">
 </head>
@@ -22,15 +22,26 @@
   <main>
     <section id="chat-view" class="view active" aria-labelledby="chat-title">
       <div class="intro-grid">
-        <div><p class="eyebrow">A living reference implementation</p><h1 id="chat-title">Ask Docent about Docent.</h1><p class="lede">Answers stay inside a validated public evidence collection. Live inference synthesizes from bounded evidence when configured. Deterministic corpus mode remains explicit and available without a model key.</p></div>
+        <div><p class="eyebrow">A living reference implementation</p><h1 id="chat-title">Ask Docent about Docent. Walk the Constitution.</h1><p class="lede">The default reference collection combines Docent's self-description with a verified snapshot of the OpenBGI Constitution for Beneficial AGI, Draft 0.6. Deterministic mode returns the best matching source record without model inference; a future mediated runtime can synthesize over the same bounded evidence.</p></div>
         <aside class="connection-card" aria-live="polite"><span id="connection-dot" class="dot"></span><div><strong id="connection-label">Connecting</strong><small id="provider-label">Checking public API…</small></div><button id="configure-api" class="text-button">API settings</button></aside>
       </div>
       <div id="setup-panel" class="notice hidden"><strong>Connect this Pages client to a public Docent API.</strong><p>The repository deployment variable is not configured. Enter a public API URL below; only that URL is stored locally.</p></div>
-      <section class="questions" aria-label="Example questions"><p class="eyebrow">Try a pressure point</p><div id="example-questions" class="chips"></div></section>
-      <section id="messages" class="messages" aria-live="polite" aria-label="Conversation"><article class="message docent welcome"><span class="speaker">Docent</span><p>I can explain what this project does now, what remains incomplete, and which authored pathways are available or blocked. I do not choose the roadmap.</p></article></section>
+      <section class="questions" aria-label="Self-docent questions"><p class="eyebrow">Self-docent</p><div id="example-questions" class="chips"></div></section>
+      <section class="questions" aria-label="OpenBGI Constitution questions">
+        <p class="eyebrow">Worked example · OpenBGI Constitution · Draft 0.6</p>
+        <p>The served records are exact normalized sections of the <a href="https://docs.google.com/document/d/11cTcfq8biFMSppDqG-P-7uIaZMSr7prfsiI5EkVZ0LM/edit?tab=t.0" target="_blank" rel="noopener noreferrer">canonical Google Doc</a>, pinned by section hash and independently checked for source drift.</p>
+        <div id="constitution-questions" class="chips">
+          <button class="chip" type="button" onclick="sendQuestion('What are Joy, Growth, Choice, and Continuity?')">What are Joy, Growth, Choice, and Continuity?</button>
+          <button class="chip" type="button" onclick="sendQuestion('What happens when constitutional principles conflict?')">What happens when constitutional principles conflict?</button>
+          <button class="chip" type="button" onclick="sendQuestion('What are the anti-capture tripwires?')">What are the anti-capture tripwires?</button>
+          <button class="chip" type="button" onclick="sendQuestion('What is the Wisdom Clause?')">What is the Wisdom Clause?</button>
+          <button class="chip" type="button" onclick="sendQuestion('How should the Constitution be interpreted?')">How should the Constitution be interpreted?</button>
+        </div>
+      </section>
+      <section id="messages" class="messages" aria-live="polite" aria-label="Conversation"><article class="message docent welcome"><span class="speaker">Docent</span><p>I can explain this project from its own records or point you into the verified OpenBGI Constitution worked example. In deterministic mode I return source evidence without pretending a model interpreted it.</p></article></section>
       <form id="chat-form" class="composer">
         <label class="sr-only" for="chat-input">Ask Docent</label>
-        <textarea id="chat-input" maxlength="12000" rows="2" placeholder="Ask about capabilities, evidence, or next pathways…" required></textarea>
+        <textarea id="chat-input" maxlength="12000" rows="2" placeholder="Ask about Docent or the Constitution…" required></textarea>
         <div class="mode-controls"><span id="mode-label">Loading inference mode…</span><button id="toggle-mode" type="button" class="text-button hidden"></button><button id="deterministic-fallback" type="button" class="secondary hidden">Use deterministic corpus mode</button></div><div class="composer-actions"><button id="reset-chat" type="button" class="secondary">Reset local conversation</button><button id="send-chat" type="submit" class="primary">Ask Docent <span aria-hidden="true">→</span></button></div>
       </form>
     </section>
@@ -46,13 +57,13 @@
       <div class="deploy-grid">
         <article class="panel"><span class="step">01</span><h2>Run locally</h2><pre><code>python -m venv .venv
 pip install -e ".[dev]"
-docent-serve</code></pre><p>Open <code>http://localhost:7860</code>. Deterministic corpus mode is the offline default. Configure an OpenAI-compatible provider for live inference.</p></article>
+docent-serve</code></pre><p>Open <code>http://localhost:7860</code>. Deterministic corpus mode is the offline default and needs no model credential.</p></article>
         <article class="panel"><span class="step">02</span><h2>Run with Docker</h2><pre><code>docker build -t docent .
-docker run --rm -p 7860:7860 docent</code></pre><p>The unprivileged container exposes <code>/health</code> on port 7860.</p></article>
-        <article class="panel"><span class="step">03</span><h2>Pages + Space</h2><p>GitHub Pages serves this static client. A Hugging Face Docker Space serves the API. The reference deployment uses OpenRouter through the generic OpenAI-compatible provider; the browser never calls OpenRouter directly. Set the Pages public API URL to the Space URL.</p></article>
-        <article class="panel"><span class="step">04</span><h2>Author another docent</h2><p>Replace the typed public corpus and behavior contract, validate both, then deploy the same gateway and client. Provider credentials remain server-side.</p></article>
+docker run --rm -p 7860:7860 docent</code></pre><p>The unprivileged container exposes <code>/health</code> on port 7860 and serves the same checked reference collection.</p></article>
+        <article class="panel"><span class="step">03</span><h2>Pages + Space</h2><p>GitHub Pages serves this static client. The reference Hugging Face Docker Space serves the bounded API in deterministic mode. The browser receives only the public Docent API URL.</p></article>
+        <article class="panel"><span class="step">04</span><h2>Mediated inference later</h2><p>Docent keeps evidence authorization and citations. A future AlphaClaw runtime can sit behind the provider boundary without changing the source contract or putting inference credentials in this client.</p></article>
       </div>
-      <section class="secret-map panel"><h2>Configuration boundaries</h2><dl><div><dt>Public client</dt><dd>API base URL, repository URL, display name, deployment mode</dd></div><div><dt>GitHub deployment</dt><dd>HF_TOKEN secret; HF_SPACE_ID and optional DOCENT_API_BASE_URL variables</dd></div><div><dt>Hugging Face runtime</dt><dd>DOCENT_API_KEY is a Space secret only; provider settings are Space variables</dd></div></dl></section>
+      <section class="secret-map panel"><h2>Configuration boundaries</h2><dl><div><dt>Public client</dt><dd>API base URL, repository URL, display name, deployment mode</dd></div><div><dt>GitHub deployment</dt><dd>One narrowly scoped Hugging Face deployment token; Space ID and public API URL are variables</dd></div><div><dt>Hugging Face runtime</dt><dd>The reference deterministic deployment requires no model credential</dd></div></dl></section>
     </section>
   </main>
   <dialog id="api-dialog"><form method="dialog" id="api-form"><h2>Public API connection</h2><p>Enter a public Docent API origin, such as <code>https://example.hf.space</code>. Never enter a model key.</p><label for="api-url">API base URL</label><input id="api-url" type="url" placeholder="https://example.hf.space"><div class="dialog-actions"><button value="cancel" class="secondary">Cancel</button><button id="save-api" value="default" class="primary">Save URL</button></div></form></dialog>

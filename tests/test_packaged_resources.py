@@ -21,8 +21,12 @@ def test_packaged_defaults_resolve_outside_repository(
 
     assert contract.identity.name
     assert records
+    assert any(record.record_id == "openbgi.article-xi" for record in records)
     assert manifest.pathways
     assert default_resource("corpus/self-docent.jsonl").exists()
+    assert default_resource("corpus/reference.collection.json").exists()
+    assert default_resource("sources/openbgi-constitution.lock.json").exists()
+    assert default_resource("sources/openbgi-constitution/draft-0.6/article-xi.txt").exists()
     assert (default_resource_root() / "development" / "capabilities.yaml").exists()
 
 

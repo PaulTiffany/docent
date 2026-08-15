@@ -1,7 +1,7 @@
 pathway_id: openrouter-live-inference
 title: Capped OpenRouter live inference
 intent: Make real bounded synthesis the normal public experience while retaining explicit deterministic corpus mode.
-status: active
+status: superseded
 evidence_basis: [Human directive on 2026-08-05, Existing generic OpenAI-compatible provider and public demo]
 preconditions:
   - capability_id: bounded-single-user-chat
@@ -14,7 +14,7 @@ invariants: [Docent controls evidence authorization, Local response validation r
 risks: [Free routing availability changes externally, Shared allowance can be exhausted, Routed models vary in JSON reliability]
 unresolved_uncertainties: [Which routed models answer synthesis questions reliably, Whether live synthesis yields more useful visitor feedback]
 reversibility: High; operators can return to mock mode or change the configured model without code changes.
-lock_in_implications: Low; OpenRouter uses the generic OpenAI-compatible boundary and is a reference deployment choice.
+lock_in_implications: Low; OpenRouter used the generic OpenAI-compatible boundary and was a reference deployment experiment rather than a required dependency.
 completion_evidence:
   - {evidence_id: provider-metadata-tests, evidence_type: repository, description: Typed provider metadata implementation passes, status: satisfied}
   - {evidence_id: openrouter-config-tests, evidence_type: repository, description: OpenRouter-compatible and generic configuration tests pass, status: satisfied}
@@ -23,11 +23,11 @@ completion_evidence:
   - {evidence_id: frontend-mode-tests, evidence_type: repository, description: Frontend mode and secret-boundary tests pass, status: satisfied}
   - {evidence_id: documentation, evidence_type: repository, description: Deployment and security documentation exists, status: satisfied}
   - {evidence_id: branch-ci, evidence_type: repository, description: Branch CI is green, status: satisfied}
-  - {evidence_id: space-live-config, evidence_type: live, description: Hugging Face reports live inference enabled, status: satisfied}
-  - {evidence_id: pages-live-config, evidence_type: live, description: Pages retrieves the live configuration, status: satisfied}
-  - {evidence_id: browser-live-answer, evidence_type: live, description: Browser-to-Space synthesis succeeds with actual model and supporting records, status: satisfied}
-  - {evidence_id: deterministic-still-explicit, evidence_type: live, description: Deterministic mode remains explicitly selectable and labeled, status: satisfied}
-  - {evidence_id: environment-model-switch, evidence_type: live, description: A model switch using only DOCENT_MODEL is observed if practical, status: pending}
+  - {evidence_id: space-live-config, evidence_type: live, description: Hugging Face reported live inference enabled during the experiment, status: satisfied}
+  - {evidence_id: pages-live-config, evidence_type: live, description: Pages retrieved the live configuration during the experiment, status: satisfied}
+  - {evidence_id: browser-live-answer, evidence_type: live, description: Browser-to-Space synthesis succeeded with actual model and supporting records, status: satisfied}
+  - {evidence_id: deterministic-still-explicit, evidence_type: live, description: Deterministic mode remained explicitly selectable and labeled, status: satisfied}
+  - {evidence_id: environment-model-switch, evidence_type: live, description: A DOCENT_MODEL-only switch was optional and not needed to establish the provider seam, status: pending}
 implementation_references: [src/docent/providers/openai_compatible.py, src/docent/service.py, web/app.js]
 pathways_unlocked: [evaluation-harness, research-observability]
 pathways_made_harder: []
@@ -44,4 +44,4 @@ pressure_profile:
   future_option_value: high
   dependence_on_external_services: high
   authors_note: Qualitative pressures authored for human deliberation; they are not an aggregate or optimum.
-public_explanation: A human selected capped live inference as the next experiment. OpenRouter is the reference gateway, not a required dependency or an automatically optimal choice.
+public_explanation: The 2026-08-05 direct-provider experiment established bounded live synthesis and the provider seam. That deployment choice is now superseded; the reference Docent is deterministic while mediated AlphaClaw inference is developed separately.
