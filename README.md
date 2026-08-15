@@ -31,7 +31,9 @@ The self-docent explains the implementation, limitations, deployment, and author
 
 ### Worked example: OpenBGI Constitution
 
-The OpenBGI worked example is not an LLM paraphrase. Docent serves exact normalized constitutional sections from a checked Draft 0.6 snapshot. Each section is bound to the canonical Google Doc ID and a SHA-256 in `sources/openbgi-constitution.lock.json`.
+The OpenBGI worked example is not an LLM paraphrase. Docent deterministically extracts the canonical Google Doc into one checked text sheet per article/section, then compiles each stable sentence/list item into an addressable cell. Sheet records preserve the exact full constitutional section; cell records provide finer source addresses without rewriting the text.
+
+The provenance lock in `sources/openbgi-constitution.lock.json` binds the live export, checked text sheets, constitutional body, and cells to Draft 0.6. The JSON lock and runtime records are derived indexes; **the source remains the Constitution text**.
 
 Useful questions include:
 
@@ -41,7 +43,7 @@ Useful questions include:
 - What is the Wisdom Clause?
 - How should the Constitution be interpreted?
 
-The independent **Verify BGI Constitution source** workflow fetches the canonical public Google Docs export and compares it with the checked lock every day. Source drift goes red; it does not silently rewrite the served snapshot.
+The independent **Verify BGI Constitution source** workflow fetches the canonical public Google Docs export and compares it with the checked text sheets and lock every day. Source drift goes red; it does not silently rewrite the served snapshot.
 
 ## Why keep deterministic mode first-class?
 
@@ -80,7 +82,7 @@ The third command performs a network source check. Normal serving and CI tests u
 
 ## Build another docent
 
-A collection manifest can compose JSONL records with verified built-in source adapters. The default is `corpus/reference.collection.json`, which combines `corpus/self-docent.jsonl` with the OpenBGI snapshot. Individual JSONL corpora remain supported for simpler deployments.
+A collection manifest can compose JSONL records with verified built-in source adapters. The default is `corpus/reference.collection.json`, which combines `corpus/self-docent.jsonl` with the OpenBGI document compiler. Individual JSONL corpora remain supported for simpler deployments.
 
 See [corpus authoring](docs/CORPUS_AUTHORING.md).
 
