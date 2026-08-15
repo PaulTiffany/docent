@@ -1,13 +1,18 @@
 from __future__ import annotations
 
-import hashlib
 import json
 from pathlib import Path
 
 from docent.models import DocentRecord
+from docent.openbgi_source import (
+    CANONICAL_URL,
+    DOCUMENT_ID,
+    SECTIONS,
+    SNAPSHOT_FILENAME,
+    build_manifest,
+    compile_workbook,
+)
 
-DOCUMENT_ID = "11cTcfq8biFMSppDqG-P-7uIaZMSr7prfsiI5EkVZ0LM"
-CANONICAL_URL = f"https://docs.google.com/document/d/{DOCUMENT_ID}/edit?tab=t.0"
 SUBJECT_ID = "openbgi-constitution"
 
 SECTION_SPECS = (
@@ -114,25 +119,12 @@ SECTION_SPECS = (
     ),
 )
 
+if tuple((key, heading) for key, heading, _topics in SECTION_SPECS) != SECTIONS:
+    raise RuntimeError("OpenBGI retrieval metadata drifted from the source compiler")
+
 
 class OpenBGISnapshotError(RuntimeError):
     pass
-
-
-def canonicalize(text: str) -> str:
-    text = text.replace("\r\n", "\n").replace("\r", "\n")
-    output: list[str] = []
-    previous_blank = False
-    for raw_line in text.split("\n"):
-        line = raw_line.rstrip()
-        if not line:
-            if not previous_blank:
-                output.append("")
-            previous_blank = True
-            continue
-        output.append(line)
-        previous_blank = False
-    return "\n".join(output).strip() + "\n"
 
 
 def _question_forms(key: str, heading: str) -> list[str]:
@@ -169,72 +161,119 @@ def _question_forms(key: str, heading: str) -> list[str]:
     return forms + extras.get(key, [])
 
 
+def _base_record(
+    *,
+    record_id: str,
+    record_type: str,
+    title: str,
+    content: str,
+    source_section: str,
+    topics: tuple[str, ...],
+    question_forms: list[str],
+    boundaries: list[str],
+    version: str,
+) -> DocentRecord:
+    return DocentRecord.model_validate(
+        {
+            "record_id": record_id,
+            "record_type": record_type,
+            "subject_id": SUBJECT_ID,
+            "title": title,
+            "content": content,
+            "question_forms": question_forms,
+            "topics": list(topics),
+            "entities": ["OpenBGI Constitution for Beneficial AGI", "OpenBGI"],
+            "source": {
+                "document_id": DOCUMENT_ID,
+                "section": source_section,
+                "url": CANONICAL_URL,
+                "authority": "primary",
+            },
+            "speech_act": "quotes-source",
+            "boundaries": boundaries,
+            "answer_policy": "public",
+            "public_links": [
+                {
+                    "label": "Canonical OpenBGI Constitution Google Doc",
+                    "url": CANONICAL_URL,
+                }
+            ],
+            "confidence": "authoritative",
+            "valid_from": "2026-08-15",
+            "version": version,
+        }
+    )
+
+
 def load_openbgi_records(snapshot_root: Path, lock_path: Path) -> list[DocentRecord]:
     if not snapshot_root.is_dir():
         raise OpenBGISnapshotError(f"OpenBGI snapshot directory does not exist: {snapshot_root}")
     if not lock_path.is_file():
         raise OpenBGISnapshotError(f"OpenBGI source lock does not exist: {lock_path}")
 
-    lock = json.loads(lock_path.read_text(encoding="utf-8"))
-    if lock.get("document_id") != DOCUMENT_ID:
-        raise OpenBGISnapshotError("OpenBGI source lock has an unexpected document ID")
-    if lock.get("canonical_url") != CANONICAL_URL:
-        raise OpenBGISnapshotError("OpenBGI source lock has an unexpected canonical URL")
-    if lock.get("version_label") != "Draft 0.6":
+    snapshot_path = snapshot_root / SNAPSHOT_FILENAME
+    if not snapshot_path.is_file():
+        raise OpenBGISnapshotError(f"OpenBGI document snapshot is missing: {SNAPSHOT_FILENAME}")
+
+    try:
+        lock = json.loads(lock_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise OpenBGISnapshotError("OpenBGI source lock is not valid JSON") from exc
+
+    source_text = snapshot_path.read_text(encoding="utf-8-sig")
+    manifest = build_manifest(source_text)
+    if lock != manifest:
+        raise OpenBGISnapshotError(
+            "OpenBGI document snapshot does not exactly match its checked source lock"
+        )
+    if manifest.get("version_label") != "Draft 0.6":
         raise OpenBGISnapshotError("OpenBGI worked example expects the reviewed Draft 0.6 snapshot")
 
-    locked_sections = {row["key"]: row for row in lock.get("sections", [])}
-    expected_keys = [key for key, _heading, _topics in SECTION_SPECS]
-    if list(locked_sections) != expected_keys:
-        raise OpenBGISnapshotError("OpenBGI source lock sections do not match the worked example")
+    workbook = compile_workbook(source_text)
+    metadata = {key: (heading, topics) for key, heading, topics in SECTION_SPECS}
 
     records: list[DocentRecord] = []
-    for key, heading, topics in SECTION_SPECS:
-        source_path = snapshot_root / f"{key}.txt"
-        if not source_path.is_file():
-            raise OpenBGISnapshotError(f"OpenBGI snapshot section is missing: {source_path.name}")
-        content = canonicalize(source_path.read_text(encoding="utf-8-sig"))
-        row = locked_sections[key]
-        observed_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
-        if row.get("heading") != heading or row.get("sha256") != observed_hash:
-            raise OpenBGISnapshotError(f"OpenBGI snapshot section failed its lock: {key}")
-        if content.splitlines()[0] != heading:
-            raise OpenBGISnapshotError(f"OpenBGI snapshot heading mismatch: {key}")
+    for sheet in workbook.sheets:
+        heading, topics = metadata[sheet.key]
+        if heading != sheet.heading:
+            raise OpenBGISnapshotError(f"OpenBGI sheet heading mismatch: {sheet.key}")
 
         records.append(
-            DocentRecord.model_validate(
-                {
-                    "record_id": f"openbgi.{key}",
-                    "record_type": "constitution-source",
-                    "subject_id": SUBJECT_ID,
-                    "title": heading,
-                    "content": content,
-                    "question_forms": _question_forms(key, heading),
-                    "topics": list(topics),
-                    "entities": ["OpenBGI Constitution for Beneficial AGI", "OpenBGI"],
-                    "source": {
-                        "document_id": DOCUMENT_ID,
-                        "section": heading,
-                        "url": CANONICAL_URL,
-                        "authority": "primary",
-                    },
-                    "speech_act": "quotes-source",
-                    "boundaries": [
-                        "Exact normalized source section from the canonical Google Doc; Docent has not rewritten this text.",
-                        f"Pinned Draft 0.6 section SHA-256: {observed_hash}.",
-                        "Remote source drift is independently checked against the same lock.",
-                    ],
-                    "answer_policy": "public",
-                    "public_links": [
-                        {
-                            "label": "Canonical OpenBGI Constitution Google Doc",
-                            "url": CANONICAL_URL,
-                        }
-                    ],
-                    "confidence": "authoritative",
-                    "valid_from": "2026-08-15",
-                    "version": "Draft 0.6",
-                }
+            _base_record(
+                record_id=f"openbgi.{sheet.key}",
+                record_type="constitution-sheet",
+                title=sheet.heading,
+                content=sheet.content,
+                source_section=sheet.heading,
+                topics=topics,
+                question_forms=_question_forms(sheet.key, sheet.heading),
+                boundaries=[
+                    "Exact normalized constitutional sheet compiled deterministically from the checked canonical document snapshot; no model rewrote this text.",
+                    f"Sheet SHA-256: {sheet.sha256}.",
+                    f"Sheet contains {len(sheet.cells)} addressable source cells.",
+                    "Remote source drift is independently checked against the same source lock.",
+                ],
+                version=workbook.version_label,
             )
         )
+
+        for cell in sheet.cells:
+            records.append(
+                _base_record(
+                    record_id=f"openbgi.{sheet.key}.{cell.address}",
+                    record_type="constitution-cell",
+                    title=f"{sheet.heading} · {cell.address}",
+                    content=cell.text,
+                    source_section=f"{sheet.heading} [{cell.address}]",
+                    topics=topics,
+                    question_forms=[],
+                    boundaries=[
+                        "Exact source cell compiled deterministically from the checked canonical document snapshot; no model rewrote this text.",
+                        f"Cell address: {sheet.key}!{cell.address}.",
+                        f"Cell SHA-256: {cell.sha256}.",
+                        f"Parent sheet SHA-256: {sheet.sha256}.",
+                    ],
+                    version=workbook.version_label,
+                )
+            )
     return records
