@@ -14,9 +14,12 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from docent.openbgi_source import (  # noqa: E402
     EXPORT_URL,
+    SECTIONS,
     OpenBGISourceError,
     build_manifest,
-    canonicalize,
+    compile_sheet,
+    compile_workbook,
+    sha256_text,
     version_directory,
 )
 
@@ -59,8 +62,40 @@ def manifest_text(manifest: dict) -> str:
     return json.dumps(manifest, indent=2, ensure_ascii=False) + "\n"
 
 
-def snapshot_path(manifest: dict) -> Path:
-    return SNAPSHOT_ROOT / version_directory(str(manifest["version_label"])) / "document.txt"
+def snapshot_dir(manifest: dict) -> Path:
+    return SNAPSHOT_ROOT / version_directory(str(manifest["version_label"]))
+
+
+def validate_local_sheets(expected: dict) -> None:
+    root = snapshot_dir(expected)
+    sections = expected.get("sections", [])
+    if [row.get("key") for row in sections] != [key for key, _heading in SECTIONS]:
+        raise SourceError("checked source lock sheets do not match the compiler")
+    rows = {row["key"]: row for row in sections}
+
+    normalized_sections: list[str] = []
+    cell_count = 0
+    for key, heading in SECTIONS:
+        path = root / f"{key}.txt"
+        sheet = compile_sheet(key, heading, path.read_text(encoding="utf-8-sig"))
+        observed = {
+            "key": sheet.key,
+            "heading": sheet.heading,
+            "sha256": sheet.sha256,
+            "characters": sheet.characters,
+            "cell_count": len(sheet.cells),
+            "cells_sha256": sheet.cells_sha256,
+        }
+        if rows.get(key) != observed:
+            raise SourceError(f"checked sheet snapshot failed its source lock: {key}")
+        normalized_sections.append(sheet.content.strip())
+        cell_count += len(sheet.cells)
+
+    body = "\n".join(normalized_sections) + "\n"
+    if sha256_text(body) != expected.get("normalized_document_sha256"):
+        raise SourceError("checked sheet snapshots failed the constitutional-body lock")
+    if cell_count != expected.get("cell_count"):
+        raise SourceError("checked sheet snapshots failed the aggregate cell-count lock")
 
 
 def describe_drift(expected: dict, observed: dict, *, prefix: str) -> str:
@@ -93,7 +128,7 @@ def main() -> None:
     parser.add_argument(
         "--write",
         action="store_true",
-        help="Replace the checked source lock and versioned document snapshot with the observed source.",
+        help="Replace the checked source lock and versioned text sheets with the observed source.",
     )
     parser.add_argument(
         "--from-file",
@@ -110,13 +145,15 @@ def main() -> None:
         raise SystemExit(2) from exc
 
     if args.write:
-        path = snapshot_path(observed)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(canonicalize(observed_source), encoding="utf-8")
+        root = snapshot_dir(observed)
+        root.mkdir(parents=True, exist_ok=True)
+        workbook = compile_workbook(observed_source)
+        for sheet in workbook.sheets:
+            (root / f"{sheet.key}.txt").write_text(sheet.content, encoding="utf-8")
         LOCK_PATH.parent.mkdir(parents=True, exist_ok=True)
         LOCK_PATH.write_text(manifest_text(observed), encoding="utf-8")
         print(
-            "wrote source snapshot and lock "
+            "wrote source sheets and lock "
             f"{observed['version_label']} {observed['normalized_document_sha256']}"
         )
         return
@@ -130,22 +167,10 @@ def main() -> None:
 
     try:
         expected = json.loads(LOCK_PATH.read_text(encoding="utf-8"))
-        local_path = snapshot_path(expected)
-        local = build_manifest(local_path.read_text(encoding="utf-8-sig"))
+        validate_local_sheets(expected)
     except (OSError, json.JSONDecodeError, UnicodeError, SourceError) as exc:
-        print(f"checked source snapshot failed: {exc}", file=sys.stderr)
+        print(f"checked source sheets failed: {exc}", file=sys.stderr)
         raise SystemExit(2) from exc
-
-    if expected != local:
-        print(
-            describe_drift(
-                expected,
-                local,
-                prefix="Checked OpenBGI document snapshot drifted from its lock.",
-            ),
-            file=sys.stderr,
-        )
-        raise SystemExit(1)
 
     if expected != observed:
         print(
