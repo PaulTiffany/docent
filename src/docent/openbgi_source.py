@@ -8,8 +8,6 @@ DOCUMENT_ID = "11cTcfq8biFMSppDqG-P-7uIaZMSr7prfsiI5EkVZ0LM"
 CANONICAL_URL = f"https://docs.google.com/document/d/{DOCUMENT_ID}/edit?tab=t.0"
 EXPORT_URL = f"https://docs.google.com/document/d/{DOCUMENT_ID}/export?format=txt"
 EXPECTED_TITLE = "OpenBGI Constitution for Beneficial AGI"
-SNAPSHOT_FILENAME = "document.txt"
-
 SECTIONS = (
     ("caveats", "Caveats"),
     ("preamble", "Preamble"),
@@ -30,18 +28,7 @@ SECTIONS = (
 )
 
 _ABBREVIATIONS = {
-    "e.g.",
-    "i.e.",
-    "mr.",
-    "mrs.",
-    "ms.",
-    "dr.",
-    "prof.",
-    "vs.",
-    "etc.",
-    "u.s.",
-    "u.k.",
-    "no.",
+    "e.g.", "i.e.", "mr.", "mrs.", "ms.", "dr.", "prof.", "vs.", "etc.", "u.s.", "u.k.", "no."
 }
 
 
@@ -111,8 +98,6 @@ def _split_prose_line(line: str) -> list[str]:
     line = line.strip()
     if not line:
         return []
-    # Google Docs preserves bullets as physical lines in the text export. A bullet is a
-    # semantically stable constitutional unit even when it ends in a semicolon.
     if line.startswith("* "):
         return [line]
 
@@ -123,38 +108,30 @@ def _split_prose_line(line: str) -> list[str]:
         if line[index] not in ".!?":
             index += 1
             continue
-
         after_punctuation = index + 1
         while after_punctuation < len(line) and line[after_punctuation] in "\"'”’)]}":
             after_punctuation += 1
         if after_punctuation >= len(line) or not line[after_punctuation].isspace():
             index += 1
             continue
-
         token_start = index
         while token_start > start and not line[token_start - 1].isspace():
             token_start -= 1
-        token = line[token_start : index + 1].casefold()
-        if token in _ABBREVIATIONS:
+        if line[token_start : index + 1].casefold() in _ABBREVIATIONS:
             index += 1
             continue
-
         next_start = after_punctuation
         while next_start < len(line) and line[next_start].isspace():
             next_start += 1
         next_character = line[next_start] if next_start < len(line) else ""
         if next_character and not (
-            next_character.isupper()
-            or next_character.isdigit()
-            or next_character in "\"'“‘("
+            next_character.isupper() or next_character.isdigit() or next_character in "\"'“‘("
         ):
             index += 1
             continue
-
         cells.append(line[start:after_punctuation].strip())
         start = next_start
         index = next_start
-
     if start < len(line):
         cells.append(line[start:].strip())
     return [cell for cell in cells if cell]
@@ -173,8 +150,24 @@ def _cellize(section_content: str) -> tuple[OpenBGICell, ...]:
 
 
 def _cells_sha256(cells: tuple[OpenBGICell, ...]) -> str:
-    serialized = "".join(f"{cell.address}\t{cell.text}\n" for cell in cells)
-    return sha256_text(serialized)
+    return sha256_text("".join(f"{cell.address}\t{cell.text}\n" for cell in cells))
+
+
+def compile_sheet(key: str, heading: str, section_content: str) -> OpenBGISheet:
+    content = canonicalize(section_content)
+    lines = content.splitlines()
+    if not lines or lines[0] != heading:
+        raise OpenBGISourceError(f"constitutional sheet heading mismatch: {key}")
+    cells = _cellize(content)
+    return OpenBGISheet(
+        key=key,
+        heading=heading,
+        content=content,
+        sha256=sha256_text(content),
+        characters=len(content),
+        cells=cells,
+        cells_sha256=_cells_sha256(cells),
+    )
 
 
 def compile_workbook(source_text: str) -> OpenBGIWorkbook:
@@ -183,18 +176,12 @@ def compile_workbook(source_text: str) -> OpenBGIWorkbook:
     nonempty = [line for line in lines if line.strip()]
     if not nonempty or nonempty[0].strip() != EXPECTED_TITLE:
         raise OpenBGISourceError("source title does not match the canonical Constitution")
-
     version_label = next(
-        (
-            line.strip()
-            for line in lines[:20]
-            if re.fullmatch(r"Draft\s+\d+(?:\.\d+)*", line.strip())
-        ),
+        (line.strip() for line in lines[:20] if re.fullmatch(r"Draft\s+\d+(?:\.\d+)*", line.strip())),
         None,
     )
     if version_label is None:
         raise OpenBGISourceError("source does not expose an expected Draft version label")
-
     positions: list[int] = []
     for _key, heading in SECTIONS:
         matches = [index for index, line in enumerate(lines) if line == heading]
@@ -205,29 +192,14 @@ def compile_workbook(source_text: str) -> OpenBGIWorkbook:
         positions.append(matches[0])
     if positions != sorted(positions):
         raise OpenBGISourceError("constitutional sections are not in the expected order")
-
     sheets: list[OpenBGISheet] = []
     normalized_sections: list[str] = []
     for index, (key, heading) in enumerate(SECTIONS):
         start = positions[index]
         end = positions[index + 1] if index + 1 < len(positions) else len(lines)
-        content = canonicalize("\n".join(lines[start:end]))
-        if content.splitlines()[0] != heading:
-            raise OpenBGISourceError(f"constitutional sheet heading mismatch: {key}")
-        cells = _cellize(content)
-        sheets.append(
-            OpenBGISheet(
-                key=key,
-                heading=heading,
-                content=content,
-                sha256=sha256_text(content),
-                characters=len(content),
-                cells=cells,
-                cells_sha256=_cells_sha256(cells),
-            )
-        )
-        normalized_sections.append(content.strip())
-
+        sheet = compile_sheet(key, heading, "\n".join(lines[start:end]))
+        sheets.append(sheet)
+        normalized_sections.append(sheet.content.strip())
     normalized_document = "\n".join(normalized_sections) + "\n"
     return OpenBGIWorkbook(
         document_text=document_text,
