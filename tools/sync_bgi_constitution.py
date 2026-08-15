@@ -12,7 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from docent.openbgi_source import (  # noqa: E402
+from docent.openbgi_source import (
     EXPORT_URL,
     SECTIONS,
     OpenBGISourceError,
