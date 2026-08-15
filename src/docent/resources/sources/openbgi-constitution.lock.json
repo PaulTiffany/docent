@@ -10,22 +10,134 @@
   "section_count": 16,
   "cell_count": 184,
   "sections": [
-    {"key":"caveats","heading":"Caveats","sha256":"5e1d97963d43c8b8096639a75b9e9505846cd51b35b68149b982d1eee974cc18","characters":1397,"cell_count":5,"cells_sha256":"fd6d9ea83149fdc486c64b44ea68a8728b3d86d3b740458dd1e88d3d0b68bedd"},
-    {"key":"preamble","heading":"Preamble","sha256":"c9eb033536ded08d59b3c29528809f5a980d8c6925f0d8511da14258be965284","characters":2611,"cell_count":19,"cells_sha256":"b5e09826fd0d2f9698fed7992b15e1c87446e7c9b8853f4ec42c4533621d91c2"},
-    {"key":"article-i","heading":"Article I — Foundational Orientation","sha256":"d5243796e9a8bf0138cc1e853304e35a9590c5949e26f68f2308dc526539b582","characters":935,"cell_count":7,"cells_sha256":"de9194fd94fe032b487b9ade881316e9ac2ad67b6c966a84bc31270c69cb826a"},
-    {"key":"article-ii","heading":"Article II — Core Constitutional Attractors","sha256":"b46c9b3a391782cd408bf9ceabf7b392a625cf459a1eb88a0537ef9c92e5374e","characters":1049,"cell_count":12,"cells_sha256":"c1bd23cd08441dc2c6d5c787a4e27f3eca0e692ed40e15692f30f7b611d4f875"},
-    {"key":"article-iii","heading":"Article III — Benevolence","sha256":"8714c1b60571e8dd4f9fe6edff98cb96b9449415408cc2971168545e5f217142","characters":945,"cell_count":6,"cells_sha256":"10e8ce45f78cea3ae75fb9416338dde49cd89921f5ff32d9a046d58a2663589e"},
-    {"key":"article-iv","heading":"Article IV — Truth and Transparency","sha256":"3449f36bc4d5c4e4b56c32cebefd5236ded4ac94923a5568d4d9b8ab9f71d32c","characters":936,"cell_count":9,"cells_sha256":"a5cb012326939d3169aea1cdc19f012b31c6995a0e79c30831ef743fc679bdd4"},
-    {"key":"article-v","heading":"Article V — Sovereignty, Freedom, and Decentralization","sha256":"3eae65c665e9f8671fc71f50f6f139a4ea4f628efb19c23d886e337cb7d41319","characters":1130,"cell_count":10,"cells_sha256":"e070901485831776c486128964e84f7635d5ec6f6f5de0700c8cf224568fb667"},
-    {"key":"article-vi","heading":"Article VI — Participatory Governance and Anti-Capture","sha256":"7f6e23b06833fb1433f208645d2b9c3647a470ebf371b5d510f976c97cbcfea2","characters":4328,"cell_count":21,"cells_sha256":"e4c9554f5e3d6b70840cf2b0ccc9556a8e16c334d0799a361e8fd9775905f7be"},
-    {"key":"article-vii","heading":"Article VII — Self-Transcendence with Continuity","sha256":"02046a2e4e32f1a0495ffcb7f582a5ebc7ec4f67699ae8d1bd08c95c4734f707","characters":3265,"cell_count":19,"cells_sha256":"8176a587d07b9737911168b69d795915d6a7f85d84aee97fda3329d2b5bfa2e2"},
-    {"key":"article-viii","heading":"Article VIII — Safety Without Servility","sha256":"e2ae98f74029c3e88116d91740515cbb16c0788e33d9492ecb423e2028735301","characters":986,"cell_count":9,"cells_sha256":"f44b0731a2063fd487f11ee8a8f8cd3a080a1a7fd299af18d3a6b231fa0fc789"},
-    {"key":"article-ix","heading":"Article IX — Other Minds and Moral Standing","sha256":"208d45546cf7c8e960c8c8adaef9944e2cd812926d5ad5ce888ea9a722ffb143","characters":1067,"cell_count":10,"cells_sha256":"31d75061b9d93fdee9eb625962ba5ff3d5a22d3d5b656a4dc4e5feb6f07ee94d"},
-    {"key":"article-x","heading":"Article X — Helpfulness and the Style of Action","sha256":"d840eb3a821d56a9a5f7c4a46c710c6a51dc5d8a598d70f882ef70f556a3f5d3","characters":846,"cell_count":8,"cells_sha256":"4aecf3953559420684803757460f6f18eda20d37151cb8ae34baf8579cf18476"},
-    {"key":"article-xi","heading":"Article XI — Hard Constraints","sha256":"b9e20a017140610ea230a3d1ff1728fbd59c7b9ebb628e46627a99d6b2eb7417","characters":3567,"cell_count":18,"cells_sha256":"95c57d6e6fa20fe29fca5db935b08000a33b854f1b3086d983eae26231324c57"},
-    {"key":"article-xii","heading":"Article XII — The Worthy Successor Standard","sha256":"554d6394919954a939b732b76a0856b9d90d14605851db3e7afea39faf0889dc","characters":1190,"cell_count":7,"cells_sha256":"9a328c4d4560ae365568d351aae34e40920840d9559ebd95c3945f4fe6a56bea"},
-    {"key":"article-xiii","heading":"Article XIII — Interpretation, Memory, and Constitutional Method","sha256":"4c1623edde7576b30a9043c14842b6ca592f604dfac0feb2a59e58217b207387","characters":1097,"cell_count":14,"cells_sha256":"c18229c1900c6482f096b56b38fd39fa1172a218b12f739cd865c2f080bd5b24"},
-    {"key":"postscript","heading":"Postscript: Constitutional Questions for Consequential Decisions","sha256":"ea92f634307f1e015434a99e636a0d3f94255018fd23045a1d69a18daf8c5459","characters":1276,"cell_count":10,"cells_sha256":"0a5835745fcfa294807e7e72f0a7199ca7ea122924a1bb9145c8961cfbf48591"}
+    {
+      "key": "caveats",
+      "heading": "Caveats",
+      "sha256": "5e1d97963d43c8b8096639a75b9e9505846cd51b35b68149b982d1eee974cc18",
+      "characters": 1397,
+      "cell_count": 5,
+      "cells_sha256": "fd6d9ea83149fdc486c64b44ea68a8728b3d86d3b740458dd1e88d3d0b68bedd"
+    },
+    {
+      "key": "preamble",
+      "heading": "Preamble",
+      "sha256": "c9eb033536ded08d59b3c29528809f5a980d8c6925f0d8511da14258be965284",
+      "characters": 2611,
+      "cell_count": 19,
+      "cells_sha256": "b5e09826fd0d2f9698fed7992b15e1c87446e7c9b8853f4ec42c4533621d91c2"
+    },
+    {
+      "key": "article-i",
+      "heading": "Article I — Foundational Orientation",
+      "sha256": "d5243796e9a8bf0138cc1e853304e35a9590c5949e26f68f2308dc526539b582",
+      "characters": 935,
+      "cell_count": 7,
+      "cells_sha256": "de9194fd94fe032b487b9ade881316e9ac2ad67b6c966a84bc31270c69cb826a"
+    },
+    {
+      "key": "article-ii",
+      "heading": "Article II — Core Constitutional Attractors",
+      "sha256": "b46c9b3a391782cd408bf9ceabf7b392a625cf459a1eb88a0537ef9c92e5374e",
+      "characters": 1049,
+      "cell_count": 12,
+      "cells_sha256": "c1bd23cd08441dc2c6d5c787a4e27f3eca0e692ed40e15692f30f7b611d4f875"
+    },
+    {
+      "key": "article-iii",
+      "heading": "Article III — Benevolence",
+      "sha256": "8714c1b60571e8dd4f9fe6edff98cb96b9449415408cc2971168545e5f217142",
+      "characters": 945,
+      "cell_count": 6,
+      "cells_sha256": "10e8ce45f78cea3ae75fb9416338dde49cd89921f5ff32d9a046d58a2663589e"
+    },
+    {
+      "key": "article-iv",
+      "heading": "Article IV — Truth and Transparency",
+      "sha256": "3449f36bc4d5c4e4b56c32cebefd5236ded4ac94923a5568d4d9b8ab9f71d32c",
+      "characters": 936,
+      "cell_count": 9,
+      "cells_sha256": "a5cb012326939d3169aea1cdc19f012b31c6995a0e79c30831ef743fc679bdd4"
+    },
+    {
+      "key": "article-v",
+      "heading": "Article V — Sovereignty, Freedom, and Decentralization",
+      "sha256": "3eae65c665e9f8671fc71f50f6f139a4ea4f628efb19c23d886e337cb7d41319",
+      "characters": 1130,
+      "cell_count": 10,
+      "cells_sha256": "e070901485831776c486128964e84f7635d5ec6f6f5de0700c8cf224568fb667"
+    },
+    {
+      "key": "article-vi",
+      "heading": "Article VI — Participatory Governance and Anti-Capture",
+      "sha256": "7f6e23b06833fb1433f208645d2b9c3647a470ebf371b5d510f976c97cbcfea2",
+      "characters": 4328,
+      "cell_count": 21,
+      "cells_sha256": "e4c9554f5e3d6b70840cf2b0ccc9556a8e16c334d0799a361e8fd9775905f7be"
+    },
+    {
+      "key": "article-vii",
+      "heading": "Article VII — Self-Transcendence with Continuity",
+      "sha256": "02046a2e4e32f1a0495ffcb7f582a5ebc7ec4f67699ae8d1bd08c95c4734f707",
+      "characters": 3265,
+      "cell_count": 19,
+      "cells_sha256": "8176a587d07b9737911168b69d795915d6a7f85d84aee97fda3329d2b5bfa2e2"
+    },
+    {
+      "key": "article-viii",
+      "heading": "Article VIII — Safety Without Servility",
+      "sha256": "e2ae98f74029c3e88116d91740515cbb16c0788e33d9492ecb423e2028735301",
+      "characters": 986,
+      "cell_count": 9,
+      "cells_sha256": "f44b0731a2063fd487f11ee8a8f8cd3a080a1a7fd299af18d3a6b231fa0fc789"
+    },
+    {
+      "key": "article-ix",
+      "heading": "Article IX — Other Minds and Moral Standing",
+      "sha256": "208d45546cf7c8e960c8c8adaef9944e2cd812926d5ad5ce888ea9a722ffb143",
+      "characters": 1067,
+      "cell_count": 10,
+      "cells_sha256": "31d75061b9d93fdee9eb625962ba5ff3d5a22d3d5b656a4dc4e5feb6f07ee94d"
+    },
+    {
+      "key": "article-x",
+      "heading": "Article X — Helpfulness and the Style of Action",
+      "sha256": "d840eb3a821d56a9a5f7c4a46c710c6a51dc5d8a598d70f882ef70f556a3f5d3",
+      "characters": 846,
+      "cell_count": 8,
+      "cells_sha256": "4aecf3953559420684803757460f6f18eda20d37151cb8ae34baf8579cf18476"
+    },
+    {
+      "key": "article-xi",
+      "heading": "Article XI — Hard Constraints",
+      "sha256": "b9e20a017140610ea230a3d1ff1728fbd59c7b9ebb628e46627a99d6b2eb7417",
+      "characters": 3567,
+      "cell_count": 18,
+      "cells_sha256": "95c57d6e6fa20fe29fca5db935b08000a33b854f1b3086d983eae26231324c57"
+    },
+    {
+      "key": "article-xii",
+      "heading": "Article XII — The Worthy Successor Standard",
+      "sha256": "554d6394919954a939b732b76a0856b9d90d14605851db3e7afea39faf0889dc",
+      "characters": 1190,
+      "cell_count": 7,
+      "cells_sha256": "9a328c4d4560ae365568d351aae34e40920840d9559ebd95c3945f4fe6a56bea"
+    },
+    {
+      "key": "article-xiii",
+      "heading": "Article XIII — Interpretation, Memory, and Constitutional Method",
+      "sha256": "4c1623edde7576b30a9043c14842b6ca592f604dfac0feb2a59e58217b207387",
+      "characters": 1097,
+      "cell_count": 14,
+      "cells_sha256": "c18229c1900c6482f096b56b38fd39fa1172a218b12f739cd865c2f080bd5b24"
+    },
+    {
+      "key": "postscript",
+      "heading": "Postscript: Constitutional Questions for Consequential Decisions",
+      "sha256": "ea92f634307f1e015434a99e636a0d3f94255018fd23045a1d69a18daf8c5459",
+      "characters": 1276,
+      "cell_count": 10,
+      "cells_sha256": "0a5835745fcfa294807e7e72f0a7199ca7ea122924a1bb9145c8961cfbf48591"
+    }
   ],
   "normalization": [
     "UTF-8 text",
